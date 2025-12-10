@@ -33,6 +33,25 @@ nm <Leader>f :Vista finder<CR>
 "     augroup END
 " endfunction
 
+" Gtk log recent file
+function! GtkRecentLog(path)
+python3 << endpython
+path = vim.eval("a:path")
+recent_mgr = Gtk.RecentManager.get_default()
+recent_mgr.add_item('file://' + path)
+GLib.timeout_add(22, Gtk.main_quit, None)
+Gtk.main()
+endpython
+endfunction
+
+python3 << endpython
+import vim
+import gi
+import os
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GLib
+endpython
+
 
 " context.vim
 let g:Context_border_indent = { -> [0, 0] }	" disable border indent
@@ -67,6 +86,7 @@ set linebreak					" don't split words when wrapping
 autocmd FileType * setlocal formatoptions-=ro " disable continuing comments on o and enter
 set signcolumn=yes				" make sign column always visible
 autocmd Filetype * setlocal indentkeys-=:	" dont treat : as an indent key
+autocmd BufWritePost *  call system('touch -a ' . shellescape(expand('%:p'))) | call GtkRecentLog(expand("%:p"))	" update file access time on write
 
 " invisible insert,delete hack to allow indents on blank lines
 " inoremap <CR> <CR><Space><BS>
