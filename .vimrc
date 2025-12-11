@@ -45,6 +45,9 @@ endpython
 endfunction
 
 python3 << endpython
+# Add system dist-packages BEFORE venv site-packages
+sys.path.insert(0, '/usr/lib/python3/dist-packages')
+
 import vim
 import gi
 import os
