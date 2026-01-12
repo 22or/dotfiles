@@ -81,7 +81,8 @@ set backupdir=~/.vim/backup		" where backups are stored
 set directory=~/.vim/swap		" where swap files are stored
 set tabstop=4					" number of spaces in one tab
 set shiftwidth=4				" number of spaces for one shift command (>>)
-set number						" enable line numbers
+set relativenumber						" enable line numbers
+set number
 set cindent						" smarter auto indenter
 filetype plugin indent on		" detects syntax rules based on filetype
 set breakindent					" Indents word-wrapped lines as much as the 'parent' line
