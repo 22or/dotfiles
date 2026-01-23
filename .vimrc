@@ -1,12 +1,15 @@
 source $VIMRUNTIME/defaults.vim
-" let mapleader=" "	" change leader key to space
 
-" enable lsp logging
-let g:lsp_log_file = expand('~/.vim/lsp.log')
+
+
+let g:lsp_log_file = expand('~/.vim/lsp.log')	" enable lsp logging
 " let g:lsp_log_verbose = 1
 
-" load plugins
+
+
 call plug#begin()
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/asyncomplete-lsp.vim'
 Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
@@ -17,7 +20,10 @@ Plug 'wellle/context.vim'
 Plug 'liuchengxu/vista.vim'
 call plug#end()
 
-" vista.vim
+
+
+" VISTA.VIM
+
 let g:vista_default_executive='vim_lsp'	" use vim-lsp as the lsp
 let g:vista#renderer#enable_icon=0	" disable icons
 let g:vista_enable_centering_jump=0	" bugged; doesn't work for fzf
@@ -33,7 +39,10 @@ nm <Leader>f :Vista finder<CR>
 "     augroup END
 " endfunction
 
-" Gtk log recent file
+
+
+" GTK LOG RECENT FILE
+
 function! GtkRecentLog(path)
 python3 << endpython
 path = vim.eval("a:path")
@@ -45,9 +54,7 @@ endpython
 endfunction
 
 python3 << endpython
-# Add system dist-packages BEFORE venv site-packages
-sys.path.insert(0, '/usr/lib/python3/dist-packages')
-
+sys.path.insert(0, '/usr/lib/python3/dist-packages')	# Add system dist-packages BEFORE venv site-packages
 import vim
 import gi
 import os
@@ -56,14 +63,34 @@ from gi.repository import Gtk, GLib
 endpython
 
 
-" context.vim
+
+" ASYNCOMPLETE.VIM
+
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+autocmd CompleteDone * pclose	" close on done
+let g:asyncomplete_auto_completeopt = 0	" prevent completeopt from being overwritten
+set completeopt=menuone,noinsert
+set pumheight=10	" limit number of suggestions
+
+
+
+" CONTEXT.VIM
+
 let g:Context_border_indent = { -> [0, 0] }	" disable border indent
 let g:context_highlight_border='LineNr'
 let g:context_highlight_tag='LineNr'
 
-" FZF
-let $FZF_DEFAULT_COMMAND='fd --type f --hidden --follow . $HOME'	" Default search dir
+
+
+" FZF.VIM
+
+let $FZF_DEFAULT_COMMAND='fd --type f --hidden --follow . ../..'	" Default search dir
 nnoremap <c-p> :Files<CR>
+
+
+
+" MORE BINDS
 
 " Echoes the highlight class of the hovered text on F1
 nm <silent> <F1> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name")
@@ -72,8 +99,17 @@ nm <silent> <F1> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name")
     \ . ">"<CR>
 
 " Opens Document Diagnostics on F2
-nm <silent> <F2> :LspDocumentDiagnostics<CR>
+nm <silent> <F3> :LspDocumentDiagnostics<CR>
+nm <silent> <F2> :LspHover<Cr>
 
+" Invisible insert,delete hack to allow indents on blank lines
+" inoremap <CR> <CR><Space><BS>
+" nnoremap o o<Space><BS>
+" nnoremap O O<Space><BS>
+
+
+
+" VIM CONFIG
 
 set undofile					" enable undo history persistence
 set undodir=~/.vim/undo			" where undos are stored
@@ -92,17 +128,33 @@ set signcolumn=yes				" make sign column always visible
 autocmd Filetype * setlocal indentkeys-=:	" dont treat : as an indent key
 autocmd BufWritePost *  call system('touch -a ' . shellescape(expand('%:p'))) | call GtkRecentLog(expand("%:p"))	" update file access time on write
 
-" invisible insert,delete hack to allow indents on blank lines
-" inoremap <CR> <CR><Space><BS>
-" nnoremap o o<Space><BS>
-" nnoremap O O<Space><BS>
 
-" HIGHLIGHTING/LSP
-set background=dark	" needed for colors to work predictably
+
+" Function to modify popup border
+function! PopupOpened() abort
+	let popups = popup_list()
+	if empty(popups)
+		return
+	endif
+	let opts = popup_getoptions(popups[0])
+	if !has_key(opts,'borderchars')
+		call popup_setoptions(popups[0], {
+			\ 'borderchars': [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+		\ })
+	endif
+endfunction
+autocmd User lsp_float_opened call PopupOpened()
+
+
+
+" COLORS
+
+set background=dark					" needed for colors to work predictably
 let g:lsp_diagnostics_echo_cursor=1	" echo error when cursor hovers the code
-let g:lsp_semantic_enabled=1	" enable semantic highlighting
-unlet c_comment_strings	" disable highlighting constants in comments
-" let g:lsp_document_highlight_enabled = 0	" disable highlighting matching symbols
+let g:lsp_semantic_enabled=1		" enable semantic highlighting
+unlet c_comment_strings				" disable highlighting constants in comments
+
+" lsp
 hi LspSemanticVariable ctermfg=none
 hi LspSemanticParameter ctermfg=white
 hi LspSemanticProperty ctermfg=white
@@ -111,6 +163,7 @@ hi LspSemanticMember ctermfg=lightyellow
 hi lspReference ctermbg=black
 hi LspSemanticModifier ctermfg=none
 
+" vim
 hi NonText ctermfg=darkgray
 hi StorageClass ctermfg=cyan
 hi Type ctermfg=green
@@ -129,5 +182,12 @@ hi LineNr ctermfg=darkgray
 hi SignatureMarkText ctermfg=gray
 let g:ophigh_color=8	" operator color
 
+" vim-lsp/asyncomplete
+hi PMenu ctermbg=black ctermfg=gray
+hi PMenuSel ctermbg=darkgray ctermfg=black
+hi link markdownError NONE
+hi markdownCode ctermfg=lightgray ctermbg=darkgray
+
+" language-specific
 hi def link javaScriptValue Constant
 hi def link javaScriptBraces NONE
