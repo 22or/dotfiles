@@ -68,9 +68,10 @@ endpython
 
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
-autocmd CompleteDone * pclose	" close on done
+inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
+" autocmd CompleteDone * pclose	" close on done
 let g:asyncomplete_auto_completeopt = 0	" prevent completeopt from being overwritten
-set completeopt=menuone,noinsert
+set completeopt=menuone,noinsert,noselect
 set pumheight=10	" limit number of suggestions
 
 
@@ -87,6 +88,19 @@ let g:context_highlight_tag='LineNr'
 
 let $FZF_DEFAULT_COMMAND='fd --type f --hidden --follow . ../..'	" Default search dir
 nnoremap <c-p> :Files<CR>
+
+
+
+" VIM-LSP
+
+" display hover popups on top and remove borders
+augroup lsp_hover_tweaks
+    autocmd!
+    autocmd User lsp_float_opened if exists('*popup_setoptions') | call popup_setoptions(lsp#ui#vim#output#getpreviewwinid(), {
+		\ 'zindex': 1000,
+		\ 'borderchars': [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+	\ }) | endif
+augroup END
 
 
 
@@ -127,23 +141,6 @@ autocmd FileType * setlocal formatoptions-=ro " disable continuing comments on o
 set signcolumn=yes				" make sign column always visible
 autocmd Filetype * setlocal indentkeys-=:	" dont treat : as an indent key
 autocmd BufWritePost *  call system('touch -a ' . shellescape(expand('%:p'))) | call GtkRecentLog(expand("%:p"))	" update file access time on write
-
-
-
-" Function to modify popup border
-function! PopupOpened() abort
-	let popups = popup_list()
-	if empty(popups)
-		return
-	endif
-	let opts = popup_getoptions(popups[0])
-	if !has_key(opts,'borderchars')
-		call popup_setoptions(popups[0], {
-			\ 'borderchars': [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-		\ })
-	endif
-endfunction
-autocmd User lsp_float_opened call PopupOpened()
 
 
 
@@ -191,3 +188,4 @@ hi markdownCode ctermfg=lightgray ctermbg=darkgray
 " language-specific
 hi def link javaScriptValue Constant
 hi def link javaScriptBraces NONE
+
