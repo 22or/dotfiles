@@ -34,7 +34,7 @@ case "$TERM" in
 esac
 
 if [ "$color_prompt" = yes ]; then
-    PS1='\[\e[90m\]╭──[\e[092m\u@\h\e[90m]─[\[\e[94m\]\t\[\e[90m\]]─[\[\e[33m\]$(short_pwd)\[\e[90m\]]\n╰─\[\e[97m\]\$ \[\e[0m\]'
+    PS1='\[\e[90m\]╭──[\e[092m\u@\h\e[90m]─[\[\e[33m\]$(short_pwd)\[\e[90m\]]─[\[\e[94m\]\t\[\e[90m\]]\n╰─\[\e[97m\]\$ \[\e[0m\]'
 else
     PS1='\u@\h:\w\$ '
 fi
