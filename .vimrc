@@ -43,6 +43,7 @@ nm <Leader>f :Vista finder<CR>
 
 " GTK LOG RECENT FILE
 
+" Import things
 python3 << endpython
 sys.path.insert(0, '/usr/lib/python3/dist-packages')
 import vim
@@ -70,8 +71,27 @@ Gtk.main()
 endpython
 endfunction
 
+function! IsHeadless()
+    " GUI Vim running
+    if has("gui_running")
+        return 0
+    endif
+
+    " No graphical display (X11 / Wayland)
+    if empty($DISPLAY) && empty($WAYLAND_DISPLAY)
+        return 1
+    endif
+
+    " SSH sessions without forwarding
+    if exists("$SSH_CONNECTION") && empty($DISPLAY)
+        return 1
+    endif
+
+    return 0
+endfunction
+
 autocmd BufWritePost * call system('touch -a ' . shellescape(expand('%:p')))
-    \ | if get(g:, 'gtk_available', 0) | call GtkRecentLog(expand("%:p")) | endif
+    \ | if !IsHeadless() && get(g:, 'gtk_available', 0) | call GtkRecentLog(expand("%:p")) | endif
 
 
 
@@ -171,7 +191,6 @@ set linebreak					" don't split words when wrapping
 autocmd FileType * setlocal formatoptions-=ro " disable continuing comments on o and enter
 set signcolumn=yes				" make sign column always visible
 autocmd Filetype * setlocal indentkeys-=:	" dont treat : as an indent key
-autocmd BufWritePost *  call system('touch -a ' . shellescape(expand('%:p'))) | call GtkRecentLog(expand("%:p"))	" update file access time on write
 set title						" vim window title
 
 
