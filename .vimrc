@@ -93,6 +93,19 @@ nnoremap <c-p> :Files<CR>
 
 " VIM-LSP
 
+" disable python style warnings
+let g:lsp_settings = {
+\   'pylsp-all': {
+\     'initialization_options': {
+\       'pylsp': {
+\         'plugins': {
+\			'pycodestyle': {'enabled': v:false}
+\         }
+\       }
+\     }
+\   }
+\ }
+
 " display hover popups on top and remove borders
 augroup lsp_hover_tweaks
     autocmd!
@@ -141,6 +154,7 @@ autocmd FileType * setlocal formatoptions-=ro " disable continuing comments on o
 set signcolumn=yes				" make sign column always visible
 autocmd Filetype * setlocal indentkeys-=:	" dont treat : as an indent key
 autocmd BufWritePost *  call system('touch -a ' . shellescape(expand('%:p'))) | call GtkRecentLog(expand("%:p"))	" update file access time on write
+set title						" vim window title
 
 
 
@@ -188,4 +202,3 @@ hi markdownCode ctermfg=lightgray ctermbg=darkgray
 " language-specific
 hi def link javaScriptValue Constant
 hi def link javaScriptBraces NONE
-
