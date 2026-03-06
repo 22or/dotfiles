@@ -43,7 +43,24 @@ nm <Leader>f :Vista finder<CR>
 
 " GTK LOG RECENT FILE
 
+python3 << endpython
+sys.path.insert(0, '/usr/lib/python3/dist-packages')
+import vim
+import os
+
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk, GLib
+    vim.command('let g:gtk_available = 1')
+except Exception:
+    vim.command('let g:gtk_available = 0')
+endpython
+
 function! GtkRecentLog(path)
+    if !get(g:, 'gtk_available', 0)
+        return
+    endif
 python3 << endpython
 path = vim.eval("a:path")
 recent_mgr = Gtk.RecentManager.get_default()
@@ -53,14 +70,8 @@ Gtk.main()
 endpython
 endfunction
 
-python3 << endpython
-sys.path.insert(0, '/usr/lib/python3/dist-packages')	# Add system dist-packages BEFORE venv site-packages
-import vim
-import gi
-import os
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib
-endpython
+autocmd BufWritePost * call system('touch -a ' . shellescape(expand('%:p')))
+    \ | if get(g:, 'gtk_available', 0) | call GtkRecentLog(expand("%:p")) | endif
 
 
 
@@ -137,6 +148,13 @@ nm <silent> <F2> :LspHover<Cr>
 
 
 " VIM CONFIG
+
+" Create vim directories if they don't exist
+for s:dir in ['~/.vim/undo', '~/.vim/backup', '~/.vim/swap']
+    if !isdirectory(expand(s:dir))
+        call mkdir(expand(s:dir), 'p')
+    endif
+endfor
 
 set undofile					" enable undo history persistence
 set undodir=~/.vim/undo			" where undos are stored
