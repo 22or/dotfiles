@@ -41,6 +41,10 @@ fi
 unset color_prompt
 
 
+# ─── Window title ─────────────────────────────────────────────────────────────
+PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}:$(short_pwd)\007"'
+
+
 # ─── Aliases ──────────────────────────────────────────────────────────────────
 alias ll='ls -alF'
 alias la='ls -A --classify'
