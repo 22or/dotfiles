@@ -2,15 +2,7 @@
 export EDITOR=vim
 
 
-# ─── History ──────────────────────────────────────────────────────────────────
-HISTCONTROL=ignoreboth
-HISTSIZE=1000
-HISTFILESIZE=2000
-shopt -s histappend
-
-
 # ─── Prompt ───────────────────────────────────────────────────────────────────
-# Two-line prompt: ╭──[time]─[truncated/path]\n╰─$
 # Falls back to plain user@host:path$ if terminal has no color support.
 
 short_pwd() {
