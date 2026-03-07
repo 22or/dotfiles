@@ -26,7 +26,6 @@ call plug#end()
 
 let g:vista_default_executive='vim_lsp'	" use vim-lsp as the lsp
 let g:vista#renderer#enable_icon=0	" disable icons
-let g:vista_enable_centering_jump=0	" bugged; doesn't work for fzf
 nm <Leader>f :Vista finder<CR>
 " Vista patched: changed zz to zt in autoload/vista/finder/fzf.vim
 
@@ -45,23 +44,19 @@ nm <Leader>f :Vista finder<CR>
 
 " Import things
 python3 << endpython
-sys.path.insert(0, '/usr/lib/python3/dist-packages')
 import vim
-import os
 
 try:
-    import gi
-    gi.require_version('Gtk', '3.0')
-    from gi.repository import Gtk, GLib
-    vim.command('let g:gtk_available = 1')
+	sys.path.insert(0, '/usr/lib/python3/dist-packages')
+	import gi
+	gi.require_version('Gtk', '3.0')
+	from gi.repository import Gtk, GLib
+	vim.command('let g:gtk_available = 1')
 except Exception:
-    vim.command('let g:gtk_available = 0')
+	vim.command('let g:gtk_available = 0')
 endpython
 
 function! GtkRecentLog(path)
-    if !get(g:, 'gtk_available', 0)
-        return
-    endif
 python3 << endpython
 path = vim.eval("a:path")
 recent_mgr = Gtk.RecentManager.get_default()
@@ -90,8 +85,9 @@ function! IsHeadless()
     return 0
 endfunction
 
-autocmd BufWritePost * call system('touch -a ' . shellescape(expand('%:p')))
-    \ | if !IsHeadless() && get(g:, 'gtk_available', 0) | call GtkRecentLog(expand("%:p")) | endif
+if !IsHeadless() && get(g:, 'gtk_available', 0)
+    autocmd BufWritePost * call GtkRecentLog(expand("%:p"))
+endif
 
 
 
@@ -156,7 +152,7 @@ nm <silent> <F1> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name")
     \ . "> lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name")
     \ . ">"<CR>
 
-" Opens Document Diagnostics on F2
+" Opens Document Diagnostics on F3
 nm <silent> <F3> :LspDocumentDiagnostics<CR>
 nm <silent> <F2> :LspHover<Cr>
 
