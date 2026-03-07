@@ -60,8 +60,8 @@ function! GtkRecentLog(path)
 python3 << endpython
 path = vim.eval("a:path")
 recent_mgr = Gtk.RecentManager.get_default()
-recent_mgr.add_item('file://' + path)
-GLib.timeout_add(22, Gtk.main_quit, None)
+recent_mgr.add_item(GLib.filename_to_uri(path))
+GLib.timeout_add(22, Gtk.main_quit)
 Gtk.main()
 endpython
 endfunction
@@ -86,7 +86,7 @@ function! IsHeadless()
 endfunction
 
 if !IsHeadless() && get(g:, 'gtk_available', 0)
-    autocmd BufWritePost * call GtkRecentLog(expand("%:p"))
+	autocmd BufWritePost *  call system('touch -a ' . shellescape(expand('%:p'))) | call GtkRecentLog(expand("%:p"))
 endif
 
 
