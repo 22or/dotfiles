@@ -93,10 +93,11 @@ ff() {
     --exclude=*.woff2 --exclude=*.ttf --exclude=*.eot --exclude=*.pdf \
     --exclude=*.zip --exclude=*.tar --exclude=*.gz --exclude=*.lock"
 
-  local tmp_awk;   tmp_awk=$(mktemp /tmp/ff_awk.XXXX)
-  local tmp_query; tmp_query=$(mktemp /tmp/ff_query.XXXX)
+  local tmp_awk;       tmp_awk=$(mktemp /tmp/ff_awk.XXXX)
+  local tmp_query;     tmp_query=$(mktemp /tmp/ff_query.XXXX)
+  local tmp_highlight; tmp_highlight=$(mktemp /tmp/ff_hl.XXXX)
   echo "$query" > "$tmp_query"
-  trap "rm -f '$tmp_awk' '$tmp_query'" RETURN
+  trap "rm -f '$tmp_awk' '$tmp_query' '$tmp_highlight'" RETURN
 
   cat > "$tmp_awk" << 'AWK'
 {
@@ -137,8 +138,29 @@ ff() {
     gsub(q, "\033[1;31m&\033[0m", display_content)
   }
 
-  # cyan path, yellow line number, plain content
   printf "%s\t%s\t\033[36m%s\033[0m:\033[33m%s\033[0m: %s\n", path, line, short, line, display_content
+}
+AWK
+
+  cat > "$tmp_highlight" << 'AWK'
+BEGIN {
+  e    = "\033"
+  bg   = e "[48;5;237m"
+  reset = e "[0m"
+  kw   = e "[1;31m"
+}
+NR == hl {
+  # Strip ALL ANSI escape sequences for a clean slate
+  gsub(/\033\[[0-9;]*[mKHfABCDsuJh]/, "")
+  # Keyword highlight on clean text, keeping background intact after each reset
+  if (q != "") gsub(q, kw "&" reset bg)
+  print bg $0 reset
+  next
+}
+{
+  # Other lines: keep bat syntax colors, best-effort keyword highlight
+  if (q != "") gsub(q, kw "&" reset)
+  print
 }
 AWK
 
@@ -148,18 +170,10 @@ AWK
   local preview_cmd='
     q=$(cat '"'$tmp_query'"' 2>/dev/null)
     if command -v bat &>/dev/null; then
-      if [[ -n "$q" ]]; then
-        bat --style=numbers,header --color=always --highlight-line {2} {1} 2>/dev/null \
-          | grep -iE --color=always "$q|$"
-      else
-        bat --style=numbers,header --color=always --highlight-line {2} {1} 2>/dev/null
-      fi
+      bat --style=numbers --color=always --paging=never {1} 2>/dev/null \
+        | awk -v hl={2} -v q="$q" -f '"'$tmp_highlight'"'
     else
-      if [[ -n "$q" ]]; then
-        grep -n --color=always -iE "$q|$" {1}
-      else
-        cat -n {1}
-      fi
+      cat -n {1} | awk -v hl={2} -v q="$q" -f '"'$tmp_highlight'"'
     fi
   '
 
