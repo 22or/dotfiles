@@ -15,8 +15,7 @@ Two-line prompt. Falls back to plain `user@host:path$` in terminals without colo
 
 Interactive search over file contents in the current directory tree, powered by `grep` + `fzf`. Ignores `.git`, `node_modules`, `dist`, `build`, etc. and binary file types.
 
-<img width="840" height="621" alt="image" src="https://github.com/user-attachments/assets/8390a034-a274-451b-903a-053d11dbc694" />
-
+<img width="840" src="https://github.com/user-attachments/assets/a968ccea-8f47-46ca-aec1-70893fd62204" />
 
 
 ### `run` — C++ runner for competitive programming
