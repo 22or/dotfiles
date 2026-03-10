@@ -1,6 +1,10 @@
+
 I use regular Vim because Vim plugins provide the functionality I need.
 
 I recommend a terminal tiler. I use the tiling window manager that comes with Pop!_OS.
+
+## Dependencies
+* [fzf](https://github.com/junegunn/fzf)
 
 ## .bashrc
 
