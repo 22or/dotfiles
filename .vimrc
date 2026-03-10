@@ -113,7 +113,7 @@ let g:context_highlight_tag='LineNr'
 
 " FZF.VIM
 
-let $FZF_DEFAULT_COMMAND='fd --type f --hidden --follow . ../..'	" Default search dir
+let $FZF_DEFAULT_COMMAND='fdfind --type f --hidden --follow . ../..'	" Default search dir
 nnoremap <c-p> :Files<CR>
 
 

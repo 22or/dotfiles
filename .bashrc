@@ -56,9 +56,9 @@ fi
 [ -f /usr/share/doc/fzf/examples/key-bindings.bash ] && \
     source /usr/share/doc/fzf/examples/key-bindings.bash
 
-export FZF_DEFAULT_COMMAND="fd . --hidden"
+export FZF_DEFAULT_COMMAND="fdfind . --hidden"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-export FZF_ALT_C_COMMAND="fd -t d . $HOME"
+export FZF_ALT_C_COMMAND="fdfind -t d . $HOME"
 
 
 # ─── C++ helper ───────────────────────────────────────────────────────────────
