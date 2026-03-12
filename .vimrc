@@ -42,7 +42,27 @@ nm <Leader>f :Vista finder<CR>
 
 " GTK LOG RECENT FILE
 
+function! IsHeadless()
+    " GUI Vim running
+    if has("gui_running")
+        return 0
+    endif
+
+    " No graphical display (X11 / Wayland)
+    if empty($DISPLAY) && empty($WAYLAND_DISPLAY)
+        return 1
+    endif
+
+    " SSH sessions without forwarding
+    if exists("$SSH_CONNECTION") && empty($DISPLAY)
+        return 1
+    endif
+
+    return 0
+endfunction
+
 " Import things
+if has('python')
 python3 << endpython
 import vim
 
@@ -66,27 +86,10 @@ Gtk.main()
 endpython
 endfunction
 
-function! IsHeadless()
-    " GUI Vim running
-    if has("gui_running")
-        return 0
-    endif
-
-    " No graphical display (X11 / Wayland)
-    if empty($DISPLAY) && empty($WAYLAND_DISPLAY)
-        return 1
-    endif
-
-    " SSH sessions without forwarding
-    if exists("$SSH_CONNECTION") && empty($DISPLAY)
-        return 1
-    endif
-
-    return 0
-endfunction
 
 if !IsHeadless() && get(g:, 'gtk_available', 0)
 	autocmd BufWritePost *  call system('touch -a ' . shellescape(expand('%:p'))) | call GtkRecentLog(expand("%:p"))
+endif
 endif
 
 
