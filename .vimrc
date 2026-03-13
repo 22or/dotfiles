@@ -175,6 +175,7 @@ for s:dir in ['~/.vim/undo', '~/.vim/backup', '~/.vim/swap']
     endif
 endfor
 
+set mouse=						" disable mouse
 set undofile					" enable undo history persistence
 set undodir=~/.vim/undo			" where undos are stored
 set backupdir=~/.vim/backup		" where backups are stored
