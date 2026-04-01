@@ -97,7 +97,7 @@ ff() {
   local tmp_query;     tmp_query=$(mktemp /tmp/ff_query.XXXX)
   local tmp_highlight; tmp_highlight=$(mktemp /tmp/ff_hl.XXXX)
   echo "$query" > "$tmp_query"
-  trap "rm -f '$tmp_awk' '$tmp_query' '$tmp_highlight'" RETURN
+  trap "rm -f '$tmp_awk' '$tmp_query' '$tmp_highlight'" RETURN INT TERM
 
   cat > "$tmp_awk" << 'AWK'
 {
