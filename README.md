@@ -4,6 +4,7 @@ For an effective terminal setup, I recommend a terminal tiler. I use the tiling 
 * [fd](https://github.com/sharkdp/fd)
 * [fzf](https://github.com/junegunn/fzf)
 * [vim-plug](https://github.com/junegunn/vim-plug)
+* [bashmarks](https://github.com/huyng/bashmarks)
 * [bat](https://github.com/sharkdp/bat) (optional)
 
 ## Installation
@@ -26,6 +27,16 @@ Two-line prompt. Falls back to plain `user@host:path$` in terminals without colo
 Interactive search over file contents in the current directory tree, powered by `grep` + `fzf`. Ignores `.git`, `node_modules`, `dist`, `build`, etc. and binary file types.
 
 <img width="840" src="https://github.com/user-attachments/assets/b9cf0918-0e5d-4c41-a684-cb9cfca5bad0" />
+
+### [bashmarks](https://github.com/huyng/bashmarks) — directory bookmarks
+Taken from the bashmarks README:
+```
+s <bookmark_name> - Saves the current directory as "bookmark_name"
+g <bookmark_name> - Goes (cd) to the directory associated with "bookmark_name"
+p <bookmark_name> - Prints the directory associated with "bookmark_name"
+d <bookmark_name> - Deletes the bookmark
+l                 - Lists all available bookmarks
+```
 
 ### `run` — C++ runner for competitive programming
 
