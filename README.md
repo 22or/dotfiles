@@ -9,7 +9,7 @@ For an effective terminal setup, I recommend a terminal tiler. I use the tiling 
 ## Installation
 Run the interactive install script:
 ```bash
-curl -fsSL https://...install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/22or/dotfiles/refs/heads/master/install.sh | bash
 ```
 
 ## .bashrc
