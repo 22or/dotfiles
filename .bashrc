@@ -40,7 +40,6 @@ PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}:$(short_pwd)\007"'
 # ─── Aliases ──────────────────────────────────────────────────────────────────
 alias ll='ls -alF'
 alias la='ls -A --classify'
-alias l='ls -CF'
 
 # Colored output
 if [ -x /usr/bin/dircolors ]; then
@@ -208,3 +207,9 @@ AWK
     ${EDITOR:-vim} +"$line" "$file"
   fi
 }
+
+
+# ─── Bashmarks ────────────────────────────────────────────────────────────────
+# ─── Bashmarks ────────────────────────────────────────────────────────────────
+[[ -f "$HOME/.local/bin/bashmarks.sh" ]] && \
+    source "$HOME/.local/bin/bashmarks.sh"
