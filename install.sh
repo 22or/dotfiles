@@ -242,6 +242,30 @@ check_bat() {
 }
 
 
+# ─── Bashmarks ────────────────────────────────────────────────────────────────
+# Provides s, g, p, d, l commands for saving and jumping to directories.
+# https://github.com/huyng/bashmarks
+
+install_bashmarks() {
+    header "Bashmarks"
+
+    if [[ -f ~/.local/bin/bashmarks.sh ]]; then
+        info "Bashmarks already installed."
+        return
+    fi
+
+    local tmpdir=""
+    trap '[[ -n "$tmpdir" ]] && rm -rf "$tmpdir"' RETURN INT TERM
+    tmpdir=$(mktemp -d)
+
+    git clone https://github.com/huyng/bashmarks.git "$tmpdir"
+    make -C "$tmpdir" install
+    info "Bashmarks installed to ~/.local/bin/bashmarks.sh"
+
+    trap - RETURN INT TERM
+}
+
+
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 main() {
@@ -255,6 +279,7 @@ main() {
     install_vim_plug
     install_fzf
     install_fd
+	install_bashmarks
     check_bat
 
     echo
