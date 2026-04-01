@@ -222,6 +222,8 @@ install_fd() {
     append_once 'export PATH="$HOME/.fdfind:$PATH"' ~/.bashrc
     info "fd installed into ~/.fdfind"
     info "fdfind symlink created."
+
+	trap - RETURN INT TERM
 }
 
 
