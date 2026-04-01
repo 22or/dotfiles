@@ -1,11 +1,16 @@
-
-I use regular Vim because Vim plugins provide the functionality I need.
-
-I recommend a terminal tiler. I use the tiling window manager that comes with Pop!_OS.
+For an effective terminal setup, I recommend a terminal tiler. I use the tiling window manager that comes with Pop!_OS.
 
 ## Dependencies
 * [fd](https://github.com/sharkdp/fd)
 * [fzf](https://github.com/junegunn/fzf)
+* [vim-plug](https://github.com/junegunn/vim-plug)
+* [bat](https://github.com/sharkdp/bat) (optional)
+
+## Installation
+Run the interactive install script:
+```bash
+curl -fsSL https://...install.sh | bash
+```
 
 ## .bashrc
 
@@ -56,6 +61,6 @@ Plugins managed with [vim-plug](https://github.com/junegunn/vim-plug)
 
 ### GTK File Chooser Support
 
-On write, automatically logs the file in GTK's RecentManager so files edited in Vim appear in recent files across GTK apps (like the Gnome file chooser).
+On write, automatically logs the file in GTK's RecentManager so files edited in Vim appear in recent files across GTK apps (like the GNOME file chooser).
 
 Checks for GTK presence and headlessness so it's safe to use over SSH.
