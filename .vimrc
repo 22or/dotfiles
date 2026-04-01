@@ -26,7 +26,7 @@ call plug#end()
 
 let g:vista_default_executive='vim_lsp'	" use vim-lsp as the lsp
 let g:vista#renderer#enable_icon=0	" disable icons
-nm <Leader>f :Vista finder<CR>
+nnoremap <Leader>f :Vista finder<CR>
 " Vista patched: changed zz to zt in autoload/vista/finder/fzf.vim
 
 " Jump to top hack
@@ -62,7 +62,7 @@ function! IsHeadless()
 endfunction
 
 " Import things
-if has('python')
+if has('python3')
 python3 << endpython
 import vim
 
@@ -150,14 +150,14 @@ augroup END
 " MORE BINDS
 
 " Echoes the highlight class of the hovered text on F1
-nm <silent> <F1> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name")
+nnoremap <silent> <F1> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name")
     \ . '> trans<' . synIDattr(synID(line("."),col("."),0),"name")
     \ . "> lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name")
     \ . ">"<CR>
 
 " Opens Document Diagnostics on F3
-nm <silent> <F3> :LspDocumentDiagnostics<CR>
-nm <silent> <F2> :LspHover<Cr>
+nnoremap <silent> <F3> :LspDocumentDiagnostics<CR>
+nnoremap <silent> <F2> :LspHover<Cr>
 
 " Invisible insert,delete hack to allow indents on blank lines
 " inoremap <CR> <CR><Space><BS>
