@@ -5,6 +5,7 @@ I recommend a terminal tiler. I use the tiling window manager that comes with Po
 
 ## Dependencies
 * [fd](https://github.com/sharkdp/fd)
+* [fzf](https://github.com/junegunn/fzf)
 
 ## .bashrc
 
