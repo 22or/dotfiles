@@ -2,7 +2,9 @@ source $VIMRUNTIME/defaults.vim
 
 
 
-let g:lsp_log_file = expand('~/.vim/lsp.log')	" enable lsp logging
+" DEBUG 
+
+" let g:lsp_log_file = expand('~/.vim/lsp.log')	" enable lsp logging
 " let g:lsp_log_verbose = 1
 
 
@@ -26,7 +28,7 @@ call plug#end()
 
 let g:vista_default_executive='vim_lsp'	" use vim-lsp as the lsp
 let g:vista#renderer#enable_icon=0	" disable icons
-nnoremap <Leader>f :Vista finder<CR>
+nnoremap <silent> <Leader>f :Vista finder<CR>
 " Vista patched: changed zz to zt in autoload/vista/finder/fzf.vim
 
 " Jump to top hack
@@ -117,7 +119,7 @@ let g:context_highlight_tag='LineNr'
 " FZF.VIM
 
 let $FZF_DEFAULT_COMMAND='fdfind --type f --hidden --follow . ../..'	" Default search dir
-nnoremap <c-p> :Files<CR>
+nnoremap <silent> <c-p> :Files<CR>
 
 
 
@@ -158,6 +160,10 @@ nnoremap <silent> <F1> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name
 " Opens Document Diagnostics on F3
 nnoremap <silent> <F3> :LspDocumentDiagnostics<CR>
 nnoremap <silent> <F2> :LspHover<Cr>
+
+" Jump to/show definition
+nnoremap <silent> gd :LspDefinition<CR>
+nnoremap <silent> <F4> :LspPeekDefinition<CR>
 
 " Invisible insert,delete hack to allow indents on blank lines
 " inoremap <CR> <CR><Space><BS>
