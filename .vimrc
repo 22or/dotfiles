@@ -245,3 +245,7 @@ hi markdownCode ctermfg=lightgray ctermbg=darkgray
 " language-specific
 hi def link javaScriptValue Constant
 hi def link javaScriptBraces NONE
+
+" vimdiff
+hi DiffChange ctermbg=darkgray
+hi DiffText ctermfg=black ctermbg=red
