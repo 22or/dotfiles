@@ -7,7 +7,7 @@ export EDITOR=vim
 
 short_pwd() {
     local pwd="$(pwd)"
-    local max=60
+    local max=50
 
     pwd="${pwd/#$HOME/\~}"
     local len=${#pwd}
