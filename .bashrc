@@ -7,7 +7,7 @@ export EDITOR=vim
 
 short_pwd() {
     local pwd="$(pwd)"
-    local max=50
+    local max=40
 
     pwd="${pwd/#$HOME/\~}"
     local len=${#pwd}
@@ -26,7 +26,7 @@ case "$TERM" in
 esac
 
 if [ "$color_prompt" = yes ]; then
-    PS1='\[\e[90m\]╭──[\e[092m\u@\h\e[90m]─[\[\e[33m\]$(short_pwd)\[\e[90m\]]─[\[\e[94m\]\t\[\e[90m\]]\n╰─\[\e[97m\]\$ \[\e[0m\]'
+	PS1='\[\e[90m\]╭──[\e[92m\u@\h\e[90m]─[\[\e[33m\]$(short_pwd)\[\e[90m\]]$(j=$(jobs -p | wc -l); [ "$j" -gt 0 ] && printf "─[\[\e[91m\]&%s\[\e[90m\]]" "$j")\n╰─\[\e[97m\]\$ \[\e[0m\]'
 else
     PS1='\u@\h:\w\$ '
 fi
