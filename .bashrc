@@ -26,7 +26,7 @@ case "$TERM" in
 esac
 
 if [ "$color_prompt" = yes ]; then
-	PS1='\[\e[90m\]╭──[\e[92m\u@\h\e[90m]─[\[\e[33m\]$(short_pwd)\[\e[90m\]]$(j=$(jobs -p | wc -l); [ "$j" -gt 0 ] && printf "─[\[\e[91m\]&%s\[\e[90m\]]" "$j")\n╰─\[\e[97m\]\$ \[\e[0m\]'
+	PS1='\[\e[90m\]╭──[\e[92m\u@\h\e[90m]─[\[\e[33m\]$(short_pwd)\[\e[90m\]]$(j=$(jobs -s | wc -l); [ "$j" -gt 0 ] && printf "─[\[\e[91m\]&%s\[\e[90m\]]" "$j")\n╰─\[\e[97m\]\$ \[\e[0m\]'
 else
     PS1='\u@\h:\w\$ '
 fi
