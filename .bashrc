@@ -125,6 +125,7 @@ ff() {
 
   display_content = content
   if (q != "") {
+    qr = q; gsub(/[.\\+*?()\[\]{}|^$]/, "\\\\&", qr)
     match_pos = index(tolower(content), tolower(q))
     if (match_pos > 0) {
       win   = 40
@@ -134,7 +135,7 @@ ff() {
                         substr(content, start, stop - start + 1) \
                         (stop < length(content) ? "…" : "")
     }
-    gsub(q, "\033[1;31m&\033[0m", display_content)
+    gsub(qr, "\033[1;31m&\033[0m", display_content)
   }
 
   printf "%s\t%s\t\033[36m%s\033[0m:\033[33m%s\033[0m: %s\n", path, line, short, line, display_content
@@ -147,18 +148,19 @@ BEGIN {
   bg   = e "[48;5;237m"
   reset = e "[0m"
   kw   = e "[1;31m"
+  if (q != "") { qr = q; gsub(/[.\\+*?()\[\]{}|^$]/, "\\\\&", qr) }
 }
 NR == hl {
   # Strip ALL ANSI escape sequences for a clean slate
   gsub(/\033\[[0-9;]*[mKHfABCDsuJh]/, "")
   # Keyword highlight on clean text, keeping background intact after each reset
-  if (q != "") gsub(q, kw "&" reset bg)
+  if (q != "") gsub(qr, kw "&" reset bg)
   print bg $0 reset
   next
 }
 {
   # Other lines: keep bat syntax colors, best-effort keyword highlight
-  if (q != "") gsub(q, kw "&" reset)
+  if (q != "") gsub(qr, kw "&" reset)
   print
 }
 AWK
@@ -192,7 +194,7 @@ AWK
     result=$(fzf "${fzf_opts[@]}" \
       --disabled \
       --prompt '  ' \
-      --bind "change:execute-silent(echo {q} > '$tmp_query')+reload:$grep_cmd {q} . 2>/dev/null | awk -v q={q} -f '$tmp_awk' | grep -v $'^\\\t*\$' || true")
+      --bind "change:execute-silent[printf '%s' '{q}' > '$tmp_query']+reload:$grep_cmd '{q}' . 2>/dev/null | awk -v q='{q}' -f '$tmp_awk' | grep -v $'^\\\t*\$' || true")
   else
     result=$(eval "$grep_cmd '$query' ." 2>/dev/null \
       | awk -v q="$query" -f "$tmp_awk" \
