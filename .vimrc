@@ -11,6 +11,7 @@ source $VIMRUNTIME/defaults.vim
 
 call plug#begin()
 Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/asyncomplete-file.vim'
 Plug 'prabirshrestha/asyncomplete-lsp.vim'
 Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
@@ -105,6 +106,14 @@ inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
 let g:asyncomplete_auto_completeopt = 0	" prevent completeopt from being overwritten
 set completeopt=menuone,noinsert,noselect
 set pumheight=10	" limit number of suggestions
+
+" register asyncomplete-file
+au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#file#get_source_options({
+    \ 'name': 'file',
+    \ 'allowlist': ['*'],
+    \ 'priority': 10,
+    \ 'completor': function('asyncomplete#sources#file#completor')
+    \ }))
 
 
 
