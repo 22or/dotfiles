@@ -56,9 +56,10 @@ Plugins managed with [vim-plug](https://github.com/junegunn/vim-plug)
 
 ### [vista.vim](https://github.com/liuchengxu/vista.vim) — symbol navigation
 * Depends on vim-lsp
+* LSP and file path suggestions
 * ``<Leader>f`` opens a symbol selector window
 
-### [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim) + [asyncomplete-lsp.vim](https://github.com/prabirshrestha/asyncomplete-lsp.vim) — autocomplete
+### [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim) + [asyncomplete-lsp.vim](https://github.com/prabirshrestha/asyncomplete-lsp.vim) + [asyncomplete-file.vim](https://github.com/prabirshrestha/asyncomplete-file.vim) — autocomplete
 * Depends on vim-lsp
 * ``<Tab>`` and ``<S-Tab>`` to cycle through options
 
