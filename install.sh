@@ -227,6 +227,35 @@ install_fd() {
 }
 
 
+# ─── vifm ─────────────────────────────────────────────────────────────────────
+
+install_vifm() {
+    header "vifm"
+
+    if have vifm; then
+        info "vifm already installed: $(command -v vifm)"
+        return
+    fi
+
+    ask "vifm not found. Install via apt-get download?" || return 0
+
+    local tmpdir
+    tmpdir=$(mktemp -d)
+    trap 'rm -rf "$tmpdir"' RETURN INT TERM
+
+    info "Downloading vifm package..."
+    ( cd "$tmpdir" && apt-get download vifm ) || die "apt-get download failed. Install vifm manually."
+
+    mkdir -p ~/.local
+    dpkg -x "$tmpdir"/vifm_*.deb ~/.local
+
+    append_once 'export PATH="$HOME/.local/usr/bin:$PATH"' ~/.bashrc
+    info "vifm installed into ~/.local"
+
+    trap - RETURN INT TERM
+}
+
+
 # ─── bat (optional) ───────────────────────────────────────────────────────────
 # ff() in bashrc uses bat for syntax-highlighted previews when available.
 # No install step — just inform the user.
@@ -280,6 +309,7 @@ main() {
     install_fzf
     install_fd
 	install_bashmarks
+    install_vifm
     check_bat
 
     echo
