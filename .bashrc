@@ -194,7 +194,7 @@ AWK
     result=$(fzf "${fzf_opts[@]}" \
       --disabled \
       --prompt '  ' \
-      --bind "change:execute-silent[printf '%s' '{q}' > '$tmp_query']+reload:$grep_cmd '{q}' . 2>/dev/null | awk -v q='{q}' -f '$tmp_awk' | grep -v $'^\\\t*\$' || true")
+      --bind "change:execute-silent(printf '%s' \"\$FZF_QUERY\" > '$tmp_query')+reload:[ -z \"\$FZF_QUERY\" ] && exit 0; $grep_cmd \"\$FZF_QUERY\" . 2>/dev/null | awk -v q=\"\$FZF_QUERY\" -f '$tmp_awk' | grep -v $'^\\\t*\$' || true")
   else
     result=$(eval "$grep_cmd '$query' ." 2>/dev/null \
       | awk -v q="$query" -f "$tmp_awk" \
