@@ -86,7 +86,10 @@ path = vim.eval("a:path")
 uri = GLib.filename_to_uri(path)
 mime = mimetypes.guess_type(path)[0] or 'application/octet-stream'
 recent_mgr = Gtk.RecentManager.get_default()
-recent_mgr.remove_item(uri)
+try:
+    recent_mgr.remove_item(uri)
+except Exception:
+    pass
 data = Gtk.RecentData()
 data.app_name = 'vim'
 data.app_exec = 'vim %u'
