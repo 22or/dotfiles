@@ -6,6 +6,8 @@ For an effective terminal setup, I recommend a terminal tiler. I use the tiling 
 * [vim-plug](https://github.com/junegunn/vim-plug)
 * [bashmarks](https://github.com/huyng/bashmarks)
 * [bat](https://github.com/sharkdp/bat) (optional)
+* [vifm](https://vifm.info/)
+* [chafa](https://hpjansson.org/chafa/) (optional)
 
 ## Installation
 Run the interactive install script:
@@ -45,6 +47,11 @@ Compiles and runs a `.cpp` file with `-std=c++17 -O2`, then removes the temporar
 ```bash
 run file.cpp [extra g++ flags]
 ```
+
+## [vifm](https://vifm.info/) — terminal file manager
+
+* Vi-style keys and dual-pane layout
+* [chafa](https://hpjansson.org/chafa/) — bitmap previews for images
 
 ## .vimrc
 
