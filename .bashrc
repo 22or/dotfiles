@@ -1,6 +1,9 @@
 # ─── Editor ───────────────────────────────────────────────────────────────────
 export EDITOR=vim
 
+# PATH + libraries from ~/dotfiles/install.sh (~/.local/bin, fzf, vifm apt extracts)
+[[ -f "$HOME/.local/share/dotfiles/env.sh" ]] && . "$HOME/.local/share/dotfiles/env.sh"
+
 
 # ─── Prompt ───────────────────────────────────────────────────────────────────
 # Falls back to plain user@host:path$ if terminal has no color support.
@@ -216,105 +219,68 @@ AWK
     source "$HOME/.local/bin/bashmarks.sh"
 
 
-# ─── vifm universal previews ──────────────────────────────────────────────────
-# Run once with: vifm-preview-install
-# This creates ~/.local/bin/vifm-preview and adds the needed fileviewer line
-# to ~/.config/vifm/vifmrc.
+# ─── vifm: chafa previews + palenight + number/relativenumber (vifm-preview-install) ─
+# Re-run vifm-preview-install after changing dotfiles vifm/*.
 
 vifm-preview-install() {
     mkdir -p "$HOME/.local/bin" "$HOME/.config/vifm"
 
-    cat > "$HOME/.local/bin/vifm-preview" << 'EOF'
-#!/usr/bin/env bash
-set -u
-
-file="${1:-}"
-width="${2:-80}"
-height="${3:-40}"
-lines="$height"
-
-[ -e "$file" ] || exit 0
-
-preview_text() {
-    if command -v batcat >/dev/null 2>&1; then
-        batcat --color=always --style=numbers --line-range=":$lines" -- "$file"
-    elif command -v bat >/dev/null 2>&1; then
-        bat --color=always --style=numbers --line-range=":$lines" -- "$file"
-    else
-        sed -n "1,${lines}p" -- "$file"
+    local _dotfiles
+    _dotfiles=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
+    if [[ ! -r "$_dotfiles/vifm/vifm-preview" || ! -r "$_dotfiles/vifm/vifmimgrc" || ! -r "$_dotfiles/vifm/colors/palenight.vifm" ]]; then
+        echo "vifm-preview-install: missing $_dotfiles/vifm/{vifm-preview,vifmimgrc,colors/palenight.vifm}" >&2
+        return 1
     fi
-}
-
-if [ -d "$file" ]; then
-    if command -v tree >/dev/null 2>&1; then
-        tree -C -L 2 --dirsfirst "$file" | head -n "$lines"
-    else
-        ls -la --color=always "$file"
-    fi
-    exit 0
-fi
-
-mime="$(file --dereference --brief --mime-type -- "$file")"
-
-case "$mime" in
-    text/*|application/json|application/xml|application/x-sh|application/x-shellscript)
-        preview_text
-        ;;
-
-    image/*)
-        if command -v chafa >/dev/null 2>&1; then
-            chafa --size="${width}x${height}" -- "$file"
-        else
-            file -- "$file"
-        fi
-        ;;
-
-    application/pdf)
-        if command -v pdftotext >/dev/null 2>&1; then
-            pdftotext -l 10 -nopgbrk -- "$file" - | head -n "$lines"
-        else
-            file -- "$file"
-        fi
-        ;;
-
-    audio/*|video/*)
-        if command -v mediainfo >/dev/null 2>&1; then
-            mediainfo -- "$file"
-        else
-            file -- "$file"
-        fi
-        ;;
-
-    application/zip|application/x-7z-compressed|application/x-tar|application/gzip|application/x-bzip2|application/x-xz)
-        if command -v 7z >/dev/null 2>&1; then
-            7z l -- "$file" | head -n "$lines"
-        elif command -v unzip >/dev/null 2>&1; then
-            unzip -l -- "$file" | head -n "$lines"
-        else
-            file -- "$file"
-        fi
-        ;;
-
-    *)
-        file -- "$file"
-        ;;
-esac
-EOF
-
+    cp -f "$_dotfiles/vifm/vifm-preview" "$HOME/.local/bin/vifm-preview"
     chmod +x "$HOME/.local/bin/vifm-preview"
+    cp -f "$_dotfiles/vifm/vifmimgrc" "$HOME/.config/vifm/vifmimgrc"
+    mkdir -p "$HOME/.config/vifm/colors"
+    cp -f "$_dotfiles/vifm/colors/palenight.vifm" "$HOME/.config/vifm/colors/palenight.vifm"
+    rm -f "$HOME/.local/bin/vifmimg" "$HOME/.local/bin/vifmimg.upstream" "$HOME/.local/bin/vifmrun" 2>/dev/null || true
 
     touch "$HOME/.config/vifm/vifmrc"
+    local rc="$HOME/.config/vifm/vifmrc"
 
-    if ! grep -Fq 'fileviewer *,.* ~/.local/bin/vifm-preview %c %pw %ph' "$HOME/.config/vifm/vifmrc"; then
-        cat >> "$HOME/.config/vifm/vifmrc" << 'EOF'
+    local marker='source ~/.config/vifm/vifmimgrc'
+    if ! grep -Fq "$marker" "$rc" 2>/dev/null; then
+        local tmp
+        tmp=$(mktemp)
+        if head -1 "$rc" 2>/dev/null | grep -q 'vim: filetype=vifm'; then
+            {
+                head -1 "$rc"
+                echo '" vifm dotfiles (chafa + vifm-preview)'
+                echo "$marker"
+                echo ''
+                tail -n +2 "$rc"
+            } > "$tmp"
+        else
+            {
+                echo '" vifm dotfiles (chafa + vifm-preview)'
+                echo "$marker"
+                echo ''
+                cat "$rc"
+            } > "$tmp"
+        fi
+        mv "$tmp" "$rc"
+    fi
 
-" ─── Universal previews ───────────────────────────────────────────────────────
+    if ! grep -Fq 'fileviewer *,.* ~/.local/bin/vifm-preview %c %pw %ph' "$rc"; then
+        cat >> "$rc" << 'EOF'
+
+" ─── Universal text/binary previews (vifm-preview) ───────────────────────────
 fileviewer *,.* ~/.local/bin/vifm-preview %c %pw %ph
 set quickview
 EOF
     fi
 
-    echo "vifm universal preview installed."
-    echo "Recommended packages:"
-    echo "  sudo apt install bat chafa poppler-utils mediainfo tree unzip p7zip-full"
+    if ! grep -Fq 'dotfiles: palenight ui' "$rc" 2>/dev/null; then
+        cat >> "$rc" << 'EOF'
+
+" ─── dotfiles: palenight ui ───────────────────────────────────────────────────
+colorscheme palenight
+set number
+set relativenumber
+EOF
+    fi
+
 }

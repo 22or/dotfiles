@@ -1,0 +1,5 @@
+" Chafa image previews (sixel or symbol fallback).  Other files: vifm-preview catch-all in vifmrc.
+" Image rules first so they win over fileviewer *,.*
+
+fileviewer {*.bmp,*.jpg,*.jpeg,*.png,*.gif,*.webp,*.xpm},<image/*>
+    \ ~/.local/bin/vifm-preview %c %pw %ph
