@@ -81,9 +81,18 @@ endpython
 
 function! GtkRecentLog(path)
 python3 << endpython
+import mimetypes
 path = vim.eval("a:path")
+uri = GLib.filename_to_uri(path)
+mime = mimetypes.guess_type(path)[0] or 'application/octet-stream'
 recent_mgr = Gtk.RecentManager.get_default()
-recent_mgr.add_item(GLib.filename_to_uri(path))
+recent_mgr.remove_item(uri)
+data = Gtk.RecentData()
+data.app_name = 'vim'
+data.app_exec = 'vim %u'
+data.mime_type = mime
+data.is_private = False
+recent_mgr.add_full(uri, data)
 GLib.timeout_add(22, Gtk.main_quit)
 Gtk.main()
 endpython
