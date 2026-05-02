@@ -172,6 +172,7 @@ _ensure_fzf_keybindings() {
 # The fd releases ship a binary named 'fd', so we create a 'fdfind' symlink.
 
 FD_VERSION="10.4.2"
+VIFM_VERSION="0.14.3"
 
 install_fd() {
     header "fd (fdfind)"
@@ -237,20 +238,35 @@ install_vifm() {
         return
     fi
 
-    ask "vifm not found. Install via apt-get download?" || return 0
+    ask "vifm not found. Install vifm v${VIFM_VERSION}?" || return 0
 
     local tmpdir
     tmpdir=$(mktemp -d)
     trap 'rm -rf "$tmpdir"' RETURN INT TERM
 
-    info "Downloading vifm package..."
-    ( cd "$tmpdir" && apt-get download vifm ) || die "apt-get download failed. Install vifm manually."
+    mkdir -p "$HOME/.local/bin"
 
-    mkdir -p ~/.local
-    dpkg -x "$tmpdir"/vifm_*.deb ~/.local
+    case "$(uname -m)" in
+        x86_64)
+            info "Downloading vifm ${VIFM_VERSION} AppImage..."
+            local appimg="$tmpdir/vifm.AppImage"
+            fetch \
+                "https://github.com/vifm/vifm/releases/download/v${VIFM_VERSION}/vifm-v${VIFM_VERSION}-x86_64.AppImage" \
+                "$appimg"
+            chmod +x "$appimg"
+            ( cd "$tmpdir" && ./vifm.AppImage --appimage-extract >/dev/null )
+            cp "$tmpdir/squashfs-root/usr/bin/vifm" "$HOME/.local/bin/vifm"
+            ;;
+        *)
+            info "Downloading vifm package via apt-get..."
+            ( cd "$tmpdir" && apt-get download vifm ) || die "apt-get download failed. Install vifm manually."
+            dpkg -x "$tmpdir"/vifm_*.deb "$tmpdir/pkg"
+            cp "$tmpdir/pkg/usr/bin/vifm" "$HOME/.local/bin/vifm"
+            ;;
+    esac
 
-    append_once 'export PATH="$HOME/.local/usr/bin:$PATH"' ~/.bashrc
-    info "vifm installed into ~/.local"
+    append_once 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc
+    info "vifm installed into ~/.local/bin"
 
     trap - RETURN INT TERM
 }

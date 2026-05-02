@@ -214,3 +214,107 @@ AWK
 # ─── Bashmarks ────────────────────────────────────────────────────────────────
 [[ -f "$HOME/.local/bin/bashmarks.sh" ]] && \
     source "$HOME/.local/bin/bashmarks.sh"
+
+
+# ─── vifm universal previews ──────────────────────────────────────────────────
+# Run once with: vifm-preview-install
+# This creates ~/.local/bin/vifm-preview and adds the needed fileviewer line
+# to ~/.config/vifm/vifmrc.
+
+vifm-preview-install() {
+    mkdir -p "$HOME/.local/bin" "$HOME/.config/vifm"
+
+    cat > "$HOME/.local/bin/vifm-preview" << 'EOF'
+#!/usr/bin/env bash
+set -u
+
+file="${1:-}"
+width="${2:-80}"
+height="${3:-40}"
+lines="$height"
+
+[ -e "$file" ] || exit 0
+
+preview_text() {
+    if command -v batcat >/dev/null 2>&1; then
+        batcat --color=always --style=numbers --line-range=":$lines" -- "$file"
+    elif command -v bat >/dev/null 2>&1; then
+        bat --color=always --style=numbers --line-range=":$lines" -- "$file"
+    else
+        sed -n "1,${lines}p" -- "$file"
+    fi
+}
+
+if [ -d "$file" ]; then
+    if command -v tree >/dev/null 2>&1; then
+        tree -C -L 2 --dirsfirst "$file" | head -n "$lines"
+    else
+        ls -la --color=always "$file"
+    fi
+    exit 0
+fi
+
+mime="$(file --dereference --brief --mime-type -- "$file")"
+
+case "$mime" in
+    text/*|application/json|application/xml|application/x-sh|application/x-shellscript)
+        preview_text
+        ;;
+
+    image/*)
+        if command -v chafa >/dev/null 2>&1; then
+            chafa --size="${width}x${height}" -- "$file"
+        else
+            file -- "$file"
+        fi
+        ;;
+
+    application/pdf)
+        if command -v pdftotext >/dev/null 2>&1; then
+            pdftotext -l 10 -nopgbrk -- "$file" - | head -n "$lines"
+        else
+            file -- "$file"
+        fi
+        ;;
+
+    audio/*|video/*)
+        if command -v mediainfo >/dev/null 2>&1; then
+            mediainfo -- "$file"
+        else
+            file -- "$file"
+        fi
+        ;;
+
+    application/zip|application/x-7z-compressed|application/x-tar|application/gzip|application/x-bzip2|application/x-xz)
+        if command -v 7z >/dev/null 2>&1; then
+            7z l -- "$file" | head -n "$lines"
+        elif command -v unzip >/dev/null 2>&1; then
+            unzip -l -- "$file" | head -n "$lines"
+        else
+            file -- "$file"
+        fi
+        ;;
+
+    *)
+        file -- "$file"
+        ;;
+esac
+EOF
+
+    chmod +x "$HOME/.local/bin/vifm-preview"
+
+    touch "$HOME/.config/vifm/vifmrc"
+
+    if ! grep -Fq 'fileviewer *,.* ~/.local/bin/vifm-preview %c %pw %ph' "$HOME/.config/vifm/vifmrc"; then
+        cat >> "$HOME/.config/vifm/vifmrc" << 'EOF'
+
+" ─── Universal previews ───────────────────────────────────────────────────────
+fileviewer *,.* ~/.local/bin/vifm-preview %c %pw %ph
+set quickview
+EOF
+    fi
+
+    echo "vifm universal preview installed."
+    echo "Recommended packages:"
+    echo "  sudo apt install bat chafa poppler-utils mediainfo tree unzip p7zip-full"
+}
