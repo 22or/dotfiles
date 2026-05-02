@@ -84,6 +84,8 @@ vifm_previews_already_configured() {
 FD_VERSION="10.4.2"
 BAT_VERSION="0.26.1"
 VIFM_VERSION="0.14.3"
+# Static Linux binary from https://hpjansson.org/chafa/releases/static/ (apt download often fails over SSH).
+CHAFA_VERSION="1.18.2"
 
 # Target triple for sharkdp fd/bat musl .tar.gz releases.
 github_musl_triple() {
@@ -343,7 +345,8 @@ install_vifm() {
 
 # ─── vifm preview stack (chafa images + text/binary via vifm-preview) ─────
 
-# Download .debs with apt-get (no install privileges) and merge into ~/.local/opt/vifm-deps
+# Download .debs with apt-get (no install privileges) and merge into ~/.local/opt/vifm-deps.
+# On many SSH boxes apt indices exist but apt-get download fails; install_chafa_static fills the gap.
 install_vifm_apt_debs() {
     have apt-get || return 0
     have apt-cache || return 0
@@ -370,6 +373,56 @@ install_vifm_apt_debs() {
         done
         shopt -u nullglob
     done
+
+    trap - RETURN INT TERM
+}
+
+# Official glibc static build — works when apt-get download has no chafa (minimal/SSH hosts).
+install_chafa_static() {
+    have chafa && return 0
+
+    local triple archive url tmpdir binroot binpath
+    case "$(uname -m)" in
+        x86_64)        triple=x86_64-linux-gnu ;;
+        armv7l|armv6*) triple=armv7l-linux-gnu ;;
+        aarch64|arm64)
+            info "chafa: no hpjansson.org static tarball for aarch64; install the distro package or fix apt-get download."
+            return 0
+            ;;
+        *)
+            info "chafa: no static build for arch $(uname -m); install chafa from your distro."
+            return 0
+            ;;
+    esac
+
+    archive="chafa-${CHAFA_VERSION}-1-${triple}.tar.gz"
+    url="https://hpjansson.org/chafa/releases/static/${archive}"
+
+    tmpdir=$(mktemp -d)
+    trap 'rm -rf "$tmpdir"' RETURN INT TERM
+
+    fetch_soft "$url" "$tmpdir/$archive" || {
+        info "chafa: could not fetch ${url}. Install chafa from your package manager."
+        trap - RETURN INT TERM
+        return 0
+    }
+
+    tar -xzf "$tmpdir/$archive" -C "$tmpdir" || {
+        trap - RETURN INT TERM
+        return 0
+    }
+
+    binroot="$tmpdir/chafa-${CHAFA_VERSION}-1-${triple}"
+    binpath="$binroot/chafa"
+    [[ -x "$binpath" ]] || {
+        trap - RETURN INT TERM
+        return 0
+    }
+
+    mkdir -p "$HOME/.local/bin"
+    cp -f "$binpath" "$HOME/.local/bin/chafa"
+    chmod +x "$HOME/.local/bin/chafa"
+    info "chafa → ~/.local/bin/chafa (static ${CHAFA_VERSION})"
 
     trap - RETURN INT TERM
 }
@@ -494,6 +547,8 @@ main() {
     install_bashmarks
     install_vifm
     install_vifm_previews_optional
+
+    install_chafa_static
 
     refresh_dotfiles_env
 
