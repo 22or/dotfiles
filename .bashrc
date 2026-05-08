@@ -76,7 +76,7 @@ run() {
 
     trap 'rm -f "$base"' RETURN INT TERM
 
-    g++ -std=c++17 -O2 "$src" -o "$base" "$@" || { echo "Compilation failed."; return 1; }
+    g++ -DDEBUG -std=c++17 -O2 "$src" -o "$base" "$@" || { echo "Compilation failed."; return 1; }
     "./$base"
 	echo
 }

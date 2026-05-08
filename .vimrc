@@ -235,7 +235,7 @@ hi LspSemanticParameter ctermfg=white
 hi LspSemanticProperty ctermfg=white
 hi LspSemanticClass ctermfg=green
 hi LspSemanticMember ctermfg=lightyellow
-hi lspReference ctermbg=black
+hi lspReference ctermbg=none
 hi LspSemanticModifier ctermfg=none
 
 " vim
