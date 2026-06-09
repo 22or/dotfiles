@@ -24,17 +24,6 @@ Set `DOTFILES_ROOT` before running to use a different checkout path.
 
 Re-run `~/dotfiles/install.sh` to refresh symlinks after pulling dotfile changes.
 
-## Migrating or fixing a broken install
-
-The cleanest path for duplicate `~/.bashrc` lines, old copied vifm files, or blocked symlinks:
-
-```bash
-~/dotfiles/uninstall.sh
-~/dotfiles/install.sh
-```
-
-`uninstall.sh` removes symlinks, dotfiles-related `~/.bashrc` lines, and user-local tool installs. It keeps the `~/dotfiles` checkout so reinstall is one command away.
-
 ## Layout
 
 ```
