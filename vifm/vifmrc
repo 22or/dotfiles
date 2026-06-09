@@ -1,0 +1,11 @@
+" vifm dotfiles (chafa + vifm-preview)
+source ~/.config/vifm/vifmimgrc
+
+" ─── Universal text/binary previews (vifm-preview) ───────────────────────────
+fileviewer *,.* ~/.local/bin/vifm-preview %c %pw %ph
+set quickview
+
+" ─── dotfiles: palenight ui ───────────────────────────────────────────────────
+colorscheme palenight
+set number
+set relativenumber

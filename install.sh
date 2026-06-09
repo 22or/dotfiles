@@ -73,9 +73,15 @@ fetch_soft() {
 # Exceptions: check_prerequisites, install_dotfiles (clone is mandatory when repo missing).
 
 vifm_previews_already_configured() {
-    [[ -x "${HOME}/.local/bin/vifm-preview" ]] \
-        && [[ -f "${HOME}/.config/vifm/vifmimgrc" ]] \
-        && grep -Fq 'source ~/.config/vifm/vifmimgrc' "${HOME}/.config/vifm/vifmrc" 2>/dev/null
+    local root expected
+    root=$(dotfiles_root)
+    expected=$(readlink -f "${root}/vifm/vifm-preview")
+    [[ -L "${HOME}/.local/bin/vifm-preview" ]] \
+        && [[ "$(readlink -f "${HOME}/.local/bin/vifm-preview")" == "$expected" ]] \
+        && [[ -L "${HOME}/.config/vifm/vifmimgrc" ]] \
+        && [[ "$(readlink -f "${HOME}/.config/vifm/vifmimgrc")" == "$(readlink -f "${root}/vifm/vifmimgrc")" ]] \
+        && [[ -L "${HOME}/.config/vifm/vifmrc" ]] \
+        && [[ "$(readlink -f "${HOME}/.config/vifm/vifmrc")" == "$(readlink -f "${root}/vifm/vifmrc")" ]]
 }
 
 
@@ -482,7 +488,7 @@ install_vifm_previews() {
 
     local root
     root=$(dotfiles_root)
-    if [[ ! -r "$root/vifm/vifm-preview" ]]; then
+    if [[ ! -r "$root/vifm/vifm-preview" || ! -r "$root/vifm/vifmrc" ]]; then
         return 0
     fi
 
