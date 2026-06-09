@@ -24,11 +24,23 @@ Set `DOTFILES_ROOT` before running to use a different checkout path.
 
 Re-run `~/dotfiles/install.sh` to refresh symlinks after pulling dotfile changes.
 
+## Migrating or fixing a broken install
+
+The cleanest path for duplicate `~/.bashrc` lines, old copied vifm files, or blocked symlinks:
+
+```bash
+~/dotfiles/uninstall.sh
+~/dotfiles/install.sh
+```
+
+`uninstall.sh` removes symlinks, dotfiles-related `~/.bashrc` lines, and user-local tool installs. It keeps the `~/dotfiles` checkout so reinstall is one command away.
+
 ## Layout
 
 ```
 dotfiles/
 ├── install.sh       # interactive installer (tools + symlinks)
+├── uninstall.sh     # tear down install artifacts
 ├── .bashrc          # shell config (sourced from ~/.bashrc)
 ├── .vimrc           # editor config (symlinked to ~/.vimrc)
 └── vifm/            # vifm config + preview script
@@ -43,12 +55,15 @@ dotfiles/
 | What | Method | Target |
 |------|--------|--------|
 | `.vimrc` | symlink | `~/.vimrc` |
-| `vifm/*` | symlink | `~/.config/vifm/`, `~/.local/bin/vifm-preview` |
+| `vifm/*` | symlink (always) | `~/.config/vifm/`, `~/.local/bin/vifm-preview` |
+| vifm preview deps | optional prompt | chafa, bat, poppler-utils, mediainfo |
 | `.bashrc` | source line in `~/.bashrc` | not replaced |
 | Tools (fzf, fd, bat, chafa, vifm, bashmarks) | downloaded/copied | `~/.local/bin`, `~/.fzf`, etc. |
 | PATH / `LD_LIBRARY_PATH` | generated `env.sh` | `~/.local/share/dotfiles/env.sh` |
 
-Existing regular files at symlink targets are left untouched (with a warning). Remove or back them up, then re-run the installer.
+Vifm **config** (`vifm/*`) is always symlinked. Preview **tooling** (chafa, bat, etc.) is a separate optional step.
+
+Existing regular files at symlink targets are left untouched (with a warning). Run `uninstall.sh` then `install.sh` for a clean reinstall.
 
 `bat` and `chafa` are optional in the dependency list but improve `ff` previews and vifm image previews.
 
