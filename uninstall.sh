@@ -53,6 +53,49 @@ remove_user_local_binary() {
     info "Removed $path"
 }
 
+# True for ~/.local/bin/{fd,fdfind} symlinks created by install_fd (musl or distro compat).
+is_dotfiles_fd_symlink() {
+    local path="$1"
+    [[ -L "$path" ]] || return 1
+
+    local musl_bin="$HOME/.local/opt/fd/fd"
+    if [[ -f "$musl_bin" ]] && [[ "$(readlink -f "$path")" == "$(readlink -f "$musl_bin")" ]]; then
+        return 0
+    fi
+
+    local resolved
+    resolved=$(readlink -f "$path" 2>/dev/null) || return 1
+    [[ -n "$resolved" ]] || return 1
+
+    if have fdfind; then
+        [[ "$resolved" == "$(readlink -f "$(command -v fdfind)")" ]] && return 0
+    fi
+    if have fd; then
+        [[ "$resolved" == "$(readlink -f "$(command -v fd)")" ]] && return 0
+    fi
+    return 1
+}
+
+# install_fd links both names under ~/.local/bin; drop them together with ~/.local/opt/fd.
+remove_fd_install() {
+    local name path
+    for name in fd fdfind; do
+        path="$HOME/.local/bin/$name"
+        [[ -e "$path" || -L "$path" ]] || continue
+        if is_dotfiles_fd_symlink "$path"; then
+            rm -f "$path"
+            info "Removed $path"
+        else
+            info "Leaving $path (not a dotfiles fd/fdfind link)."
+        fi
+    done
+
+    if [[ -d "$HOME/.local/opt/fd" ]]; then
+        rm -rf "$HOME/.local/opt/fd"
+        info "Removed ~/.local/opt/fd"
+    fi
+}
+
 main() {
     echo
     echo "════════════════════════════════════"
@@ -74,8 +117,7 @@ main() {
     clean_bashrc
 
     header "User-local tools"
-    remove_user_local_binary fd
-    remove_user_local_binary fdfind
+    remove_fd_install
     remove_user_local_binary bat
     remove_user_local_binary batcat
     remove_user_local_binary chafa
