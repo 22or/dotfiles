@@ -23,17 +23,6 @@ let g:vista#renderer#enable_icon=0	" disable icons
 nnoremap <silent> <Leader>f :Vista finder<CR>
 " Vista patched: changed zz to zt in autoload/vista/finder/fzf.vim
 
-" Jump to top hack
-" function! VistaFinderWithTop()
-"     Vista finder
-"     augroup VistaJumpTop
-"         autocmd!
-"         autocmd BufEnter * call timer_start(10, {-> execute('normal! zt') }) | autocmd! VistaJumpTop
-"     augroup END
-" endfunction
-
-
-
 " GTK LOG RECENT FILE
 
 function! IsHeadless()

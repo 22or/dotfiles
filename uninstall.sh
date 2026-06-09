@@ -2,35 +2,10 @@
 # uninstall.sh — remove dotfiles install artifacts (keeps ~/dotfiles checkout)
 set -euo pipefail
 
-DOTFILES_ROOT="${DOTFILES_ROOT:-$HOME/dotfiles}"
-
-init_dotfiles_root() {
-    local src="${BASH_SOURCE[0]:-}"
-    if [[ -n "$src" && -f "$src" ]]; then
-        local dir
-        dir=$(cd "$(dirname "$src")" && pwd)
-        if [[ -f "$dir/.bashrc" && -f "$dir/install.sh" ]]; then
-            DOTFILES_ROOT="$dir"
-        fi
-    fi
-    export DOTFILES_ROOT
-}
-
-die()  { echo "  ERROR: $*" >&2; exit 1; }
-info() { echo "  $*"; }
-header() { echo; echo "── $* ──"; }
-
-ask() {
-    local answer
-    while true; do
-        read -r -p "  $* [Y/n]: " answer
-        answer="${answer:-y}"
-        case "$answer" in
-            [Yy]*) return 0 ;;
-            [Nn]*) return 1 ;;
-        esac
-    done
-}
+[[ -n "${DOTFILES_ROOT+set}" ]] && _DOTFILES_ROOT_FROM_ENV=1
+# shellcheck source=lib/common.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
+init_dotfiles_root_from_script
 
 # Remove dest only when it is a symlink pointing at expected_src.
 remove_dotfile_symlink() {
@@ -82,8 +57,6 @@ remove_user_local_binary() {
 }
 
 main() {
-    init_dotfiles_root
-
     echo
     echo "════════════════════════════════════"
     echo "  Dotfiles Uninstaller"
@@ -110,6 +83,7 @@ main() {
     remove_user_local_binary batcat
     remove_user_local_binary chafa
     remove_user_local_binary vifm
+    rm -f "$HOME/.local/bin/vifmimg" "$HOME/.local/bin/vifmimg.upstream" "$HOME/.local/bin/vifmrun" 2>/dev/null || true
 
     if [[ -d "$HOME/.local/opt/fd" ]]; then
         rm -rf "$HOME/.local/opt/fd"
