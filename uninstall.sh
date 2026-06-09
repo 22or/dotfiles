@@ -119,6 +119,10 @@ main() {
         rm -rf "$HOME/.local/opt/vifm-deps"
         info "Removed ~/.local/opt/vifm-deps"
     fi
+    if [[ -d "$HOME/.local/opt/vifm" ]]; then
+        rm -rf "$HOME/.local/opt/vifm"
+        info "Removed ~/.local/opt/vifm"
+    fi
     if [[ -f "$HOME/.local/share/dotfiles/env.sh" ]]; then
         rm -f "$HOME/.local/share/dotfiles/env.sh"
         info "Removed ~/.local/share/dotfiles/env.sh"

@@ -165,6 +165,14 @@ refresh_dotfiles_env() {
         echo "if [[ -d \"$libpath\" ]]; then"
         echo "  export LD_LIBRARY_PATH=\"$libpath\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}\""
         echo 'fi'
+        echo '# AppImage vifm ncurses needs explicit terminfo (see install_vifm).'
+        echo 'if [[ -d "$HOME/.local/opt/vifm/usr/share/terminfo" ]]; then'
+        echo '  export TERMINFO="$HOME/.local/opt/vifm/usr/share/terminfo"'
+        echo 'elif [[ -d /usr/lib/terminfo ]]; then'
+        echo '  export TERMINFO=/usr/lib/terminfo'
+        echo 'elif [[ -d /lib/terminfo ]]; then'
+        echo '  export TERMINFO=/lib/terminfo'
+        echo 'fi'
     } > "$envf"
 }
 
@@ -298,13 +306,65 @@ install_fd() {
 
 
 # ─── vifm ─────────────────────────────────────────────────────────────────────
-# Binary into ~/.local/bin. vifm previews (vifm-preview script) — separate step.
+# Binary into ~/.local/bin. AppImage ncurses needs bundled terminfo (see ensure_vifm_terminfo).
+
+copy_vifm_terminfo_from_tree() {
+    local tree="$1"
+    if [[ ! -d "$tree/usr/share/terminfo" ]]; then
+        return 1
+    fi
+    mkdir -p "$HOME/.local/opt/vifm/usr/share"
+    cp -a "$tree/usr/share/terminfo" "$HOME/.local/opt/vifm/usr/share/"
+    info "vifm terminfo → ~/.local/opt/vifm/usr/share/terminfo"
+}
+
+# AppImage binary in ~/.local/bin cannot resolve TERM without this; also fixes upgrades.
+ensure_vifm_terminfo() {
+    [[ -f "$HOME/.local/opt/vifm/usr/share/terminfo/x/xterm-256color" ]] && return 0
+    [[ -x "$HOME/.local/bin/vifm" ]] || return 0
+
+    local tmpdir tree
+    tmpdir=$(mktemp -d)
+    trap 'rm -rf "$tmpdir"' RETURN INT TERM
+
+    case "$(uname -m)" in
+        x86_64)
+            info "Fetching vifm ${VIFM_VERSION} AppImage for terminfo..."
+            local appimg="$tmpdir/vifm.AppImage"
+            fetch \
+                "https://github.com/vifm/vifm/releases/download/v${VIFM_VERSION}/vifm-v${VIFM_VERSION}-x86_64.AppImage" \
+                "$appimg"
+            chmod +x "$appimg"
+            ( cd "$tmpdir" && ./vifm.AppImage --appimage-extract >/dev/null )
+            tree="$tmpdir/squashfs-root"
+            ;;
+        *)
+            if ! have apt-get; then
+                info "vifm terminfo: apt-get required to download vifm .deb on this arch."
+                trap - RETURN INT TERM
+                return 0
+            fi
+            info "Fetching vifm .deb for terminfo..."
+            ( cd "$tmpdir" && apt-get download vifm ) || {
+                info "vifm terminfo: apt-get download failed."
+                trap - RETURN INT TERM
+                return 0
+            }
+            dpkg -x "$tmpdir"/vifm_*.deb "$tmpdir/pkg"
+            tree="$tmpdir/pkg"
+            ;;
+    esac
+
+    copy_vifm_terminfo_from_tree "$tree" || info "vifm terminfo: none in package tree."
+    trap - RETURN INT TERM
+}
 
 install_vifm() {
     header "vifm"
 
     if have vifm; then
         info "vifm already installed ($(command -v vifm))."
+        ensure_vifm_terminfo
         return
     fi
 
@@ -337,6 +397,7 @@ install_vifm() {
             chmod +x "$appimg"
             ( cd "$tmpdir" && ./vifm.AppImage --appimage-extract >/dev/null )
             cp "$tmpdir/squashfs-root/usr/bin/vifm" "$HOME/.local/bin/vifm"
+            copy_vifm_terminfo_from_tree "$tmpdir/squashfs-root" || true
             ;;
         *)
             # apt-get download + dpkg -x extract the .deb without installing system-wide (no sudo).
@@ -347,6 +408,7 @@ install_vifm() {
             ( cd "$tmpdir" && apt-get download vifm ) || die "apt-get download failed. Install vifm manually."
             dpkg -x "$tmpdir"/vifm_*.deb "$tmpdir/pkg"
             cp "$tmpdir/pkg/usr/bin/vifm" "$HOME/.local/bin/vifm"
+            copy_vifm_terminfo_from_tree "$tmpdir/pkg" || true
             ;;
     esac
 
