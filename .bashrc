@@ -217,23 +217,3 @@ AWK
 # ─── Bashmarks ────────────────────────────────────────────────────────────────
 [[ -f "$HOME/.local/bin/bashmarks.sh" ]] && \
     source "$HOME/.local/bin/bashmarks.sh"
-
-
-# ─── vifm: chafa previews + palenight + number/relativenumber (vifm-preview-install) ─
-# Symlinks vifm/* into ~/.config/vifm and ~/.local/bin. Re-run to (re)link or migrate from copies.
-
-vifm-preview-install() {
-    mkdir -p "$HOME/.local/bin" "$HOME/.config/vifm/colors"
-
-    local _dotfiles
-    _dotfiles=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
-    if [[ ! -r "$_dotfiles/vifm/vifm-preview" || ! -r "$_dotfiles/vifm/vifmimgrc" || ! -r "$_dotfiles/vifm/vifmrc" || ! -r "$_dotfiles/vifm/colors/palenight.vifm" ]]; then
-        echo "vifm-preview-install: missing $_dotfiles/vifm/{vifm-preview,vifmimgrc,vifmrc,colors/palenight.vifm}" >&2
-        return 1
-    fi
-    ln -sf "$_dotfiles/vifm/vifm-preview" "$HOME/.local/bin/vifm-preview"
-    ln -sf "$_dotfiles/vifm/vifmimgrc" "$HOME/.config/vifm/vifmimgrc"
-    ln -sf "$_dotfiles/vifm/colors/palenight.vifm" "$HOME/.config/vifm/colors/palenight.vifm"
-    ln -sf "$_dotfiles/vifm/vifmrc" "$HOME/.config/vifm/vifmrc"
-    rm -f "$HOME/.local/bin/vifmimg" "$HOME/.local/bin/vifmimg.upstream" "$HOME/.local/bin/vifmrun" 2>/dev/null || true
-}
