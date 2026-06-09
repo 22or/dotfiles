@@ -220,67 +220,20 @@ AWK
 
 
 # ─── vifm: chafa previews + palenight + number/relativenumber (vifm-preview-install) ─
-# Re-run vifm-preview-install after changing dotfiles vifm/*.
+# Symlinks vifm/* into ~/.config/vifm and ~/.local/bin. Re-run to (re)link or migrate from copies.
 
 vifm-preview-install() {
-    mkdir -p "$HOME/.local/bin" "$HOME/.config/vifm"
+    mkdir -p "$HOME/.local/bin" "$HOME/.config/vifm/colors"
 
     local _dotfiles
     _dotfiles=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)
-    if [[ ! -r "$_dotfiles/vifm/vifm-preview" || ! -r "$_dotfiles/vifm/vifmimgrc" || ! -r "$_dotfiles/vifm/colors/palenight.vifm" ]]; then
-        echo "vifm-preview-install: missing $_dotfiles/vifm/{vifm-preview,vifmimgrc,colors/palenight.vifm}" >&2
+    if [[ ! -r "$_dotfiles/vifm/vifm-preview" || ! -r "$_dotfiles/vifm/vifmimgrc" || ! -r "$_dotfiles/vifm/vifmrc" || ! -r "$_dotfiles/vifm/colors/palenight.vifm" ]]; then
+        echo "vifm-preview-install: missing $_dotfiles/vifm/{vifm-preview,vifmimgrc,vifmrc,colors/palenight.vifm}" >&2
         return 1
     fi
-    cp -f "$_dotfiles/vifm/vifm-preview" "$HOME/.local/bin/vifm-preview"
-    chmod +x "$HOME/.local/bin/vifm-preview"
-    cp -f "$_dotfiles/vifm/vifmimgrc" "$HOME/.config/vifm/vifmimgrc"
-    mkdir -p "$HOME/.config/vifm/colors"
-    cp -f "$_dotfiles/vifm/colors/palenight.vifm" "$HOME/.config/vifm/colors/palenight.vifm"
+    ln -sf "$_dotfiles/vifm/vifm-preview" "$HOME/.local/bin/vifm-preview"
+    ln -sf "$_dotfiles/vifm/vifmimgrc" "$HOME/.config/vifm/vifmimgrc"
+    ln -sf "$_dotfiles/vifm/colors/palenight.vifm" "$HOME/.config/vifm/colors/palenight.vifm"
+    ln -sf "$_dotfiles/vifm/vifmrc" "$HOME/.config/vifm/vifmrc"
     rm -f "$HOME/.local/bin/vifmimg" "$HOME/.local/bin/vifmimg.upstream" "$HOME/.local/bin/vifmrun" 2>/dev/null || true
-
-    touch "$HOME/.config/vifm/vifmrc"
-    local rc="$HOME/.config/vifm/vifmrc"
-
-    local marker='source ~/.config/vifm/vifmimgrc'
-    if ! grep -Fq "$marker" "$rc" 2>/dev/null; then
-        local tmp
-        tmp=$(mktemp)
-        if head -1 "$rc" 2>/dev/null | grep -q 'vim: filetype=vifm'; then
-            {
-                head -1 "$rc"
-                echo '" vifm dotfiles (chafa + vifm-preview)'
-                echo "$marker"
-                echo ''
-                tail -n +2 "$rc"
-            } > "$tmp"
-        else
-            {
-                echo '" vifm dotfiles (chafa + vifm-preview)'
-                echo "$marker"
-                echo ''
-                cat "$rc"
-            } > "$tmp"
-        fi
-        mv "$tmp" "$rc"
-    fi
-
-    if ! grep -Fq 'fileviewer *,.* ~/.local/bin/vifm-preview %c %pw %ph' "$rc"; then
-        cat >> "$rc" << 'EOF'
-
-" ─── Universal text/binary previews (vifm-preview) ───────────────────────────
-fileviewer *,.* ~/.local/bin/vifm-preview %c %pw %ph
-set quickview
-EOF
-    fi
-
-    if ! grep -Fq 'dotfiles: palenight ui' "$rc" 2>/dev/null; then
-        cat >> "$rc" << 'EOF'
-
-" ─── dotfiles: palenight ui ───────────────────────────────────────────────────
-colorscheme palenight
-set number
-set relativenumber
-EOF
-    fi
-
 }
