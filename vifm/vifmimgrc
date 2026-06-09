@@ -3,3 +3,5 @@
 
 fileviewer {*.bmp,*.jpg,*.jpeg,*.png,*.gif,*.webp,*.xpm},<image/*>
     \ ~/.local/bin/vifm-preview %c %pw %ph
+
+set dotfiles
