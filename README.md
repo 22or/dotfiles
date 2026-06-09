@@ -19,15 +19,6 @@ Or: `~/dotfiles/install.sh` — set `DOTFILES_ROOT` for a non-default checkout. 
 
 Install order: CLI tools → runtime deps (bat, vifm previews) → `env.sh` → symlinks (`.vimrc`, `.bashrc` source, vifm config). Existing non-symlink files at targets are skipped; run `uninstall.sh` then `install.sh` for a clean reinstall.
 
-## Layout
-
-```
-dotfiles/
-├── install.sh / uninstall.sh
-├── lib/common.sh
-├── .bashrc / .vimrc
-└── vifm/
-```
 
 ## .bashrc
 
