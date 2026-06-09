@@ -26,16 +26,15 @@ remove_dotfile_symlink() {
     fi
 }
 
-# Drop lines from ~/.bashrc that this dotfiles install may have added.
+# Drop the source line install_dotfiles adds: source "$DOTFILES_ROOT/.bashrc"
 clean_bashrc() {
     local bashrc="$HOME/.bashrc"
     [[ -f "$bashrc" ]] || return 0
 
+    local source_line="source \"$DOTFILES_ROOT/.bashrc\""
     local tmp
     tmp=$(mktemp)
-    cp "$bashrc" "$tmp"
-    grep -Ev '^[[:space:]]*source[[:space:]]+"[^"]*/dotfiles/\.bashrc"[[:space:]]*$' "$tmp" > "${tmp}.new" || true
-    mv "${tmp}.new" "$tmp"
+    grep -vxF "$source_line" "$bashrc" > "$tmp" || true
 
     if ! cmp -s "$bashrc" "$tmp"; then
         mv "$tmp" "$bashrc"
