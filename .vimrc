@@ -1,14 +1,5 @@
 source $VIMRUNTIME/defaults.vim
 
-
-
-" DEBUG 
-
-" let g:lsp_log_file = expand('~/.vim/lsp.log')	" enable lsp logging
-" let g:lsp_log_verbose = 1
-
-
-
 call plug#begin()
 Plug 'prabirshrestha/asyncomplete.vim'
 Plug 'prabirshrestha/asyncomplete-file.vim'

@@ -10,10 +10,47 @@ For an effective terminal setup, I recommend a terminal tiler. I use the tiling 
 * [chafa](https://hpjansson.org/chafa/) (optional)
 
 ## Installation
-Run the interactive install script:
+Run the interactive install script (clones to `~/dotfiles` and re-execs from there):
 ```bash
 curl -fsSL https://raw.githubusercontent.com/22or/dotfiles/refs/heads/master/install.sh | bash
 ```
+
+Or from an existing checkout:
+```bash
+~/dotfiles/install.sh
+```
+
+Set `DOTFILES_ROOT` before running to use a different checkout path.
+
+Re-run `~/dotfiles/install.sh` to refresh symlinks after pulling dotfile changes.
+
+## Layout
+
+```
+dotfiles/
+├── install.sh       # interactive installer (tools + symlinks)
+├── .bashrc          # shell config (sourced from ~/.bashrc)
+├── .vimrc           # editor config (symlinked to ~/.vimrc)
+└── vifm/            # vifm config + preview script
+    ├── vifmrc
+    ├── vifmimgrc
+    ├── vifm-preview
+    └── colors/
+```
+
+## How config is installed
+
+| What | Method | Target |
+|------|--------|--------|
+| `.vimrc` | symlink | `~/.vimrc` |
+| `vifm/*` | symlink | `~/.config/vifm/`, `~/.local/bin/vifm-preview` |
+| `.bashrc` | source line in `~/.bashrc` | not replaced |
+| Tools (fzf, fd, bat, chafa, vifm, bashmarks) | downloaded/copied | `~/.local/bin`, `~/.fzf`, etc. |
+| PATH / `LD_LIBRARY_PATH` | generated `env.sh` | `~/.local/share/dotfiles/env.sh` |
+
+Existing regular files at symlink targets are left untouched (with a warning). Remove or back them up, then re-run the installer.
+
+`bat` and `chafa` are optional in the dependency list but improve `ff` previews and vifm image previews.
 
 ## .bashrc
 
@@ -52,6 +89,7 @@ run file.cpp [extra g++ flags]
 
 * Vi-style keys and dual-pane layout
 * [chafa](https://hpjansson.org/chafa/) — bitmap previews for images
+* Config under `vifm/` is symlinked by `install.sh` (palenight theme, chafa + text previews)
 
 ## .vimrc
 

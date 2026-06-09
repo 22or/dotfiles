@@ -46,7 +46,7 @@ alias la='ls -A --classify'
 
 # Colored output
 if [ -x /usr/bin/dircolors ]; then
-    eval "$(dircolors -b ~/.dircolors 2>/dev/null || dircolors -b)"
+    eval "$(dircolors -b)"
     alias ls='ls --color=auto'
     alias grep='grep --color=auto'
     alias fgrep='fgrep --color=auto'
@@ -55,8 +55,11 @@ fi
 
 
 # ─── fzf ──────────────────────────────────────────────────────────────────────
-[ -f /usr/share/doc/fzf/examples/key-bindings.bash ] && \
+if [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]]; then
     source /usr/share/doc/fzf/examples/key-bindings.bash
+elif [[ -f ~/.fzf/shell/key-bindings.bash ]]; then
+    source ~/.fzf/shell/key-bindings.bash
+fi
 
 export FZF_DEFAULT_COMMAND="fdfind . --hidden"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
