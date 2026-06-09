@@ -483,6 +483,23 @@ install_vifm_preview_tooling() {
 }
 
 
+link_vifm_dotfiles() {
+    local root
+    root=$(dotfiles_root)
+
+    mkdir -p "$HOME/.local/bin" "$HOME/.config/vifm/colors"
+
+    if [[ ! -r "$root/vifm/vifm-preview" || ! -r "$root/vifm/vifmimgrc" || ! -r "$root/vifm/vifmrc" || ! -r "$root/vifm/colors/palenight.vifm" ]]; then
+        die "missing $root/vifm/{vifm-preview,vifmimgrc,vifmrc,colors/palenight.vifm}"
+    fi
+    ln -sf "$root/vifm/vifm-preview" "$HOME/.local/bin/vifm-preview"
+    ln -sf "$root/vifm/vifmimgrc" "$HOME/.config/vifm/vifmimgrc"
+    ln -sf "$root/vifm/colors/palenight.vifm" "$HOME/.config/vifm/colors/palenight.vifm"
+    ln -sf "$root/vifm/vifmrc" "$HOME/.config/vifm/vifmrc"
+    rm -f "$HOME/.local/bin/vifmimg" "$HOME/.local/bin/vifmimg.upstream" "$HOME/.local/bin/vifmrun" 2>/dev/null || true
+}
+
+
 install_vifm_previews() {
     header "vifm previews (chafa + vifm-preview)"
 
@@ -492,7 +509,7 @@ install_vifm_previews() {
         return 0
     fi
 
-    bash --norc --noprofile -c "source '${root}/.bashrc' && vifm-preview-install"
+    link_vifm_dotfiles
 }
 
 
