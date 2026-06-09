@@ -98,9 +98,9 @@ ff() {
     --exclude=*.woff2 --exclude=*.ttf --exclude=*.eot --exclude=*.pdf \
     --exclude=*.zip --exclude=*.tar --exclude=*.gz --exclude=*.lock"
 
-  local tmp_awk;       tmp_awk=$(mktemp /tmp/ff_awk.XXXX)
-  local tmp_query;     tmp_query=$(mktemp /tmp/ff_query.XXXX)
-  local tmp_highlight; tmp_highlight=$(mktemp /tmp/ff_hl.XXXX)
+  local tmp_awk;       tmp_awk=$(mktemp)
+  local tmp_query;     tmp_query=$(mktemp)
+  local tmp_highlight; tmp_highlight=$(mktemp)
   echo "$query" > "$tmp_query"
   trap "rm -f '$tmp_awk' '$tmp_query' '$tmp_highlight'" RETURN INT TERM
 

@@ -39,3 +39,52 @@ ask() {
 }
 
 have() { command -v "$1" &>/dev/null; }
+
+# Append a literal line to a file only if it is not already present.
+append_once() {
+    local line="$1" file="$2"
+    grep -qxF "$line" "$file" 2>/dev/null || printf '\n%s\n' "$line" >> "$file"
+}
+
+# Portable download: prefers curl, falls back to wget.
+fetch() {
+    local url="$1" dest="$2"
+    if have curl; then
+        curl -fsSL "$url" -o "$dest"
+    elif have wget; then
+        wget -q "$url" -O "$dest"
+    else
+        die "Neither curl nor wget found. Install one and retry."
+    fi
+}
+
+# Same as fetch but returns 1 on failure (no die).
+fetch_soft() {
+    local url="$1" dest="$2"
+    if have curl; then
+        curl -fsSL "$url" -o "$dest" && return 0
+    elif have wget; then
+        wget -q "$url" -O "$dest" && return 0
+    fi
+    return 1
+}
+
+# Symlink dest → src. Skips existing regular files and foreign symlinks.
+link_dotfile() {
+    local src="$1" dest="$2"
+
+    if [[ -L "$dest" ]] && [[ "$(readlink -f "$dest" 2>/dev/null)" == "$(readlink -f "$src" 2>/dev/null)" ]]; then
+        info "$dest → $src already configured."
+        return 0
+    elif [[ -L "$dest" ]]; then
+        info "$dest is a symlink (not pointing at $src). Leaving unchanged."
+        return 1
+    elif [[ -e "$dest" ]]; then
+        info "WARNING: $dest exists and is not a symlink. Skipping to avoid data loss."
+        info "         Run uninstall.sh then install.sh for a clean reinstall."
+        return 1
+    fi
+
+    ln -s "$src" "$dest"
+    info "Linked $dest → $src"
+}

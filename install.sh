@@ -44,58 +44,6 @@ bootstrap_dotfiles_checkout() {
 }
 
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
-
-# Append a literal line to a file only if it is not already present.
-append_once() {
-    local line="$1" file="$2"
-    grep -qxF "$line" "$file" 2>/dev/null || printf '\n%s\n' "$line" >> "$file"
-}
-
-# Portable download: prefers curl, falls back to wget.
-fetch() {
-    local url="$1" dest="$2"
-    if have curl; then
-        curl -fsSL "$url" -o "$dest"
-    elif have wget; then
-        wget -q "$url" -O "$dest"
-    else
-        die "Neither curl nor wget found. Install one and retry."
-    fi
-}
-
-# Same as fetch but returns 1 on failure (no die).
-fetch_soft() {
-    local url="$1" dest="$2"
-    if have curl; then
-        curl -fsSL "$url" -o "$dest" && return 0
-    elif have wget; then
-        wget -q "$url" -O "$dest" && return 0
-    fi
-    return 1
-}
-
-# Symlink dest → src. Skips existing regular files and foreign symlinks.
-link_dotfile() {
-    local src="$1" dest="$2"
-
-    if [[ -L "$dest" ]] && [[ "$(readlink -f "$dest" 2>/dev/null)" == "$(readlink -f "$src" 2>/dev/null)" ]]; then
-        info "$dest → $src already configured."
-        return 0
-    elif [[ -L "$dest" ]]; then
-        info "$dest is a symlink (not pointing at $src). Leaving unchanged."
-        return 1
-    elif [[ -e "$dest" ]]; then
-        info "WARNING: $dest exists and is not a symlink. Skipping to avoid data loss."
-        info "         Run uninstall.sh then install.sh for a clean reinstall."
-        return 1
-    fi
-
-    ln -s "$src" "$dest"
-    info "Linked $dest → $src"
-}
-
-
 # ─── Install step convention ─────────────────────────────────────────────────
 # Every install_* routine follows the same flow:
 #   1. header "Component name"
@@ -184,6 +132,12 @@ install_dotfiles() {
     local source_line="source \"$bashrc_src\""
     append_once "$source_line" ~/.bashrc
     info "~/.bashrc: ensured source line for $bashrc_src."
+
+    if vifm_dotfiles_already_configured; then
+        info "vifm config already linked (~/.config/vifm, ~/.local/bin/vifm-preview)."
+    else
+        link_vifm_dotfiles || true
+    fi
 }
 
 
@@ -211,8 +165,7 @@ install_vim_plug() {
         "$plug_path"
 
     info "Running :PlugInstall (this may take a moment)..."
-    # -E: skip .vimrc, pick it up via -u; -s: silent batch mode
-    vim -es -u ~/.vimrc +PlugInstall +qall || true
+    vim -es -u "$DOTFILES_ROOT/.vimrc" +PlugInstall +qall || true
     info "Plugins installed."
 }
 
@@ -525,18 +478,26 @@ vifm_dotfiles_already_configured() {
 }
 
 
-vifm_preview_tooling_satisfied() {
-    (have bat || have batcat) \
-        && { have chafa || [[ -x "$HOME/.local/bin/chafa" ]]; }
+install_vifm_preview_deps() {
+    install_vifm_apt_debs
+    install_chafa_static
 }
 
 
-install_vifm_preview_tooling() {
-    install_vifm_apt_debs
-    refresh_dotfiles_env
-    install_bat_release
-    install_chafa_static
-    refresh_dotfiles_env
+install_runtime_deps() {
+    header "Runtime dependencies"
+
+    if have fzf || have vifm; then
+        install_bat_release
+    else
+        info "Skipping bat (install fzf for ff or vifm for previews)."
+    fi
+
+    if have vifm; then
+        install_vifm_preview_deps
+    else
+        info "Skipping vifm preview deps (vifm not installed)."
+    fi
 }
 
 
@@ -560,32 +521,6 @@ link_vifm_dotfiles() {
         info "Run $DOTFILES_ROOT/uninstall.sh then $DOTFILES_ROOT/install.sh for a clean reinstall."
         return 1
     fi
-}
-
-
-install_vifm_dotfiles() {
-    if vifm_dotfiles_already_configured; then
-        info "vifm config already linked (~/.config/vifm, ~/.local/bin/vifm-preview)."
-        return 0
-    fi
-
-    header "vifm config"
-    link_vifm_dotfiles || true
-}
-
-
-install_vifm_preview_tooling_optional() {
-    header "vifm preview tooling"
-
-    if vifm_preview_tooling_satisfied; then
-        info "vifm preview tooling already available (chafa + bat)."
-        return 0
-    fi
-
-    ask "Install vifm preview deps (chafa, bat, poppler-utils, mediainfo via apt download)?" \
-        || { info "Skipping vifm preview tooling."; return 0; }
-
-    install_vifm_preview_tooling
 }
 
 
@@ -627,16 +562,14 @@ main() {
     echo "════════════════════════════════════"
 
     check_prerequisites
-    install_dotfiles
     install_vim_plug
     install_fzf
     install_fd
     install_bashmarks
     install_vifm
-    install_vifm_dotfiles
-    install_vifm_preview_tooling_optional
-
+    install_runtime_deps
     refresh_dotfiles_env
+    install_dotfiles
 
     echo
     echo "════════════════════════════════════"

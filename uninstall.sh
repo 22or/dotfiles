@@ -34,8 +34,6 @@ clean_bashrc() {
     local tmp
     tmp=$(mktemp)
     cp "$bashrc" "$tmp"
-    grep -vxF '[[ -f ~/.fzf/shell/key-bindings.bash ]] && source ~/.fzf/shell/key-bindings.bash' "$tmp" > "${tmp}.new" || true
-    mv "${tmp}.new" "$tmp"
     grep -Ev '^[[:space:]]*source[[:space:]]+"[^"]*/dotfiles/\.bashrc"[[:space:]]*$' "$tmp" > "${tmp}.new" || true
     mv "${tmp}.new" "$tmp"
 
