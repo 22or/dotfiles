@@ -103,7 +103,7 @@ link_dotfile() {
         return 1
     elif [[ -e "$dest" ]]; then
         info "WARNING: $dest exists and is not a symlink. Skipping to avoid data loss."
-        info "         Back it up and rerun, or manually: ln -sf $src $dest"
+        info "         Run uninstall.sh then install.sh for a clean reinstall."
         return 1
     fi
 
@@ -479,7 +479,7 @@ install_bat_release() {
     trap - RETURN INT TERM
 }
 
-vifm_previews_already_configured() {
+vifm_dotfiles_already_configured() {
     local root="$DOTFILES_ROOT"
     [[ -L "${HOME}/.local/bin/vifm-preview" ]] \
         && [[ "$(readlink -f "${HOME}/.local/bin/vifm-preview")" == "$(readlink -f "${root}/vifm/vifm-preview")" ]] \
@@ -489,6 +489,12 @@ vifm_previews_already_configured() {
         && [[ "$(readlink -f "${HOME}/.config/vifm/vifmrc")" == "$(readlink -f "${root}/vifm/vifmrc")" ]] \
         && [[ -L "${HOME}/.config/vifm/colors/palenight.vifm" ]] \
         && [[ "$(readlink -f "${HOME}/.config/vifm/colors/palenight.vifm")" == "$(readlink -f "${root}/vifm/colors/palenight.vifm")" ]]
+}
+
+
+vifm_preview_tooling_satisfied() {
+    (have bat || have batcat) \
+        && { have chafa || [[ -x "$HOME/.local/bin/chafa" ]]; }
 }
 
 
@@ -506,27 +512,46 @@ link_vifm_dotfiles() {
     if [[ ! -r "$DOTFILES_ROOT/vifm/vifm-preview" || ! -r "$DOTFILES_ROOT/vifm/vifmimgrc" || ! -r "$DOTFILES_ROOT/vifm/vifmrc" || ! -r "$DOTFILES_ROOT/vifm/colors/palenight.vifm" ]]; then
         die "missing $DOTFILES_ROOT/vifm/{vifm-preview,vifmimgrc,vifmrc,colors/palenight.vifm}"
     fi
-    link_dotfile "$DOTFILES_ROOT/vifm/vifm-preview" "$HOME/.local/bin/vifm-preview"
-    link_dotfile "$DOTFILES_ROOT/vifm/vifmimgrc" "$HOME/.config/vifm/vifmimgrc"
-    link_dotfile "$DOTFILES_ROOT/vifm/colors/palenight.vifm" "$HOME/.config/vifm/colors/palenight.vifm"
-    link_dotfile "$DOTFILES_ROOT/vifm/vifmrc" "$HOME/.config/vifm/vifmrc"
+
+    local failed=0
+    link_dotfile "$DOTFILES_ROOT/vifm/vifm-preview" "$HOME/.local/bin/vifm-preview" || ((failed++)) || true
+    link_dotfile "$DOTFILES_ROOT/vifm/vifmimgrc" "$HOME/.config/vifm/vifmimgrc" || ((failed++)) || true
+    link_dotfile "$DOTFILES_ROOT/vifm/colors/palenight.vifm" "$HOME/.config/vifm/colors/palenight.vifm" || ((failed++)) || true
+    link_dotfile "$DOTFILES_ROOT/vifm/vifmrc" "$HOME/.config/vifm/vifmrc" || ((failed++)) || true
     rm -f "$HOME/.local/bin/vifmimg" "$HOME/.local/bin/vifmimg.upstream" "$HOME/.local/bin/vifmrun" 2>/dev/null || true
+
+    if (( failed > 0 )); then
+        echo
+        info "$failed vifm symlink(s) skipped — regular files or foreign symlinks are in the way."
+        info "Run $DOTFILES_ROOT/uninstall.sh then $DOTFILES_ROOT/install.sh for a clean reinstall."
+        return 1
+    fi
 }
 
 
-install_vifm_previews_optional() {
-    header "vifm previews"
-
-    if vifm_previews_already_configured; then
-        info "vifm previews already installed (symlinks into ~/.config/vifm and ~/.local/bin)."
+install_vifm_dotfiles() {
+    if vifm_dotfiles_already_configured; then
+        info "vifm config already linked (~/.config/vifm, ~/.local/bin/vifm-preview)."
         return 0
     fi
 
-    ask "Set up vifm previews (chafa, bat, poppler-utils, mediainfo via apt download)?" \
-        || { info "Skipping vifm previews."; return 0; }
+    header "vifm config"
+    link_vifm_dotfiles || true
+}
+
+
+install_vifm_preview_tooling_optional() {
+    header "vifm preview tooling"
+
+    if vifm_preview_tooling_satisfied; then
+        info "vifm preview tooling already available (chafa + bat)."
+        return 0
+    fi
+
+    ask "Install vifm preview deps (chafa, bat, poppler-utils, mediainfo via apt download)?" \
+        || { info "Skipping vifm preview tooling."; return 0; }
 
     install_vifm_preview_tooling
-    link_vifm_dotfiles
 }
 
 
@@ -574,8 +599,8 @@ main() {
     install_fd
     install_bashmarks
     install_vifm
-    install_vifm_previews_optional
-
+    install_vifm_dotfiles
+    install_vifm_preview_tooling_optional
     install_chafa_static
 
     refresh_dotfiles_env
