@@ -206,6 +206,11 @@ install_fd() {
 
     if have fdfind; then
         info "fdfind already available ($(command -v fdfind))."
+        if ! have fd; then
+            mkdir -p ~/.local/bin
+            ln -sf "$(command -v fdfind)" ~/.local/bin/fd
+            info "Linked fd → $(command -v fdfind) (Debian fd package)."
+        fi
         return
     fi
 
