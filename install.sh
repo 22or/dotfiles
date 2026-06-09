@@ -6,9 +6,38 @@
 # --user, and GitHub release tarballs only.
 set -euo pipefail
 
-# Directory containing this script (the dotfiles checkout).
-dotfiles_root() {
-    cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
+# Canonical checkout path. Override with DOTFILES_ROOT to use a different location.
+DOTFILES_ROOT="${DOTFILES_ROOT:-$HOME/dotfiles}"
+
+# curl | bash leaves BASH_SOURCE empty; re-exec from the checkout so all steps use DOTFILES_ROOT.
+bootstrap_dotfiles_checkout() {
+    local src="${BASH_SOURCE[0]:-}"
+
+    if [[ -n "$src" && -f "$src" ]]; then
+        local dir
+        dir=$(cd "$(dirname "$src")" && pwd)
+        if [[ -f "$dir/.bashrc" && -f "$dir/install.sh" ]]; then
+            DOTFILES_ROOT="$dir"
+            export DOTFILES_ROOT
+        fi
+        if [[ "$(readlink -f "$src")" == "$(readlink -f "$DOTFILES_ROOT/install.sh")" ]]; then
+            return 0
+        fi
+    fi
+
+    if [[ ! -d "$DOTFILES_ROOT" ]]; then
+        header "Dotfiles"
+        ask "Clone https://github.com/22or/dotfiles.git into $DOTFILES_ROOT?" \
+            || die "This installer expects a dotfiles checkout at $DOTFILES_ROOT."
+        git clone https://github.com/22or/dotfiles.git "$DOTFILES_ROOT"
+        info "Cloned into $DOTFILES_ROOT."
+    fi
+
+    [[ -f "$DOTFILES_ROOT/install.sh" ]] \
+        || die "missing $DOTFILES_ROOT/install.sh"
+
+    export DOTFILES_ROOT
+    exec bash "$DOTFILES_ROOT/install.sh" "$@"
 }
 
 
@@ -62,6 +91,26 @@ fetch_soft() {
     return 1
 }
 
+# Symlink dest → src. Skips existing regular files and foreign symlinks.
+link_dotfile() {
+    local src="$1" dest="$2"
+
+    if [[ -L "$dest" ]] && [[ "$(readlink -f "$dest" 2>/dev/null)" == "$(readlink -f "$src" 2>/dev/null)" ]]; then
+        info "$dest → $src already configured."
+        return 0
+    elif [[ -L "$dest" ]]; then
+        info "$dest is a symlink (not pointing at $src). Leaving unchanged."
+        return 1
+    elif [[ -e "$dest" ]]; then
+        info "WARNING: $dest exists and is not a symlink. Skipping to avoid data loss."
+        info "         Back it up and rerun, or manually: ln -sf $src $dest"
+        return 1
+    fi
+
+    ln -s "$src" "$dest"
+    info "Linked $dest → $src"
+}
+
 
 # ─── Install step convention ─────────────────────────────────────────────────
 # Every install_* routine follows the same flow:
@@ -71,19 +120,6 @@ fetch_soft() {
 #   4. ask "Install …?" [Y/n] → decline → info "Skipping …." ; return 0
 #   5. Download / extract / configure
 # Exceptions: check_prerequisites, install_dotfiles (clone is mandatory when repo missing).
-
-vifm_previews_already_configured() {
-    local root expected
-    root=$(dotfiles_root)
-    expected=$(readlink -f "${root}/vifm/vifm-preview")
-    [[ -L "${HOME}/.local/bin/vifm-preview" ]] \
-        && [[ "$(readlink -f "${HOME}/.local/bin/vifm-preview")" == "$expected" ]] \
-        && [[ -L "${HOME}/.config/vifm/vifmimgrc" ]] \
-        && [[ "$(readlink -f "${HOME}/.config/vifm/vifmimgrc")" == "$(readlink -f "${root}/vifm/vifmimgrc")" ]] \
-        && [[ -L "${HOME}/.config/vifm/vifmrc" ]] \
-        && [[ "$(readlink -f "${HOME}/.config/vifm/vifmrc")" == "$(readlink -f "${root}/vifm/vifmrc")" ]]
-}
-
 
 # ─── Pinned versions & arch (sharkdp musl tarballs, vifm) ─────────────────────
 
@@ -147,32 +183,15 @@ check_prerequisites() {
 install_dotfiles() {
     header "Dotfiles"
 
-    if [[ -d ~/dotfiles ]]; then
-        info "~/dotfiles repo already present."
-    else
-        ask "Clone https://github.com/22or/dotfiles.git into ~/dotfiles?" \
-            || die "This installer expects ~/dotfiles."
-        git clone https://github.com/22or/dotfiles.git ~/dotfiles
-        info "Cloned into ~/dotfiles."
-    fi
+    info "Using dotfiles at $DOTFILES_ROOT."
 
-    # .vimrc symlink
-    if [[ -L ~/.vimrc ]] && [[ "$(readlink -f ~/.vimrc 2>/dev/null)" == "$(readlink -f ~/dotfiles/.vimrc 2>/dev/null)" ]]; then
-        info "~/.vimrc → ~/dotfiles/.vimrc already configured."
-    elif [[ -L ~/.vimrc ]]; then
-        info "~/.vimrc is a symlink (not pointing at ~/dotfiles/.vimrc). Leaving unchanged."
-    elif [[ -e ~/.vimrc ]]; then
-        info "WARNING: ~/.vimrc exists and is not a symlink. Skipping to avoid data loss."
-        info "         Back it up and rerun, or manually: ln -sf ~/dotfiles/.vimrc ~/.vimrc"
-    else
-        ln -s ~/dotfiles/.vimrc ~/.vimrc
-        info "Linked ~/.vimrc → ~/dotfiles/.vimrc"
-    fi
+    link_dotfile "$DOTFILES_ROOT/.vimrc" ~/.vimrc
 
     # Source dotfiles/.bashrc from ~/.bashrc
-    local source_line='source "$HOME/dotfiles/.bashrc"'
+    local bashrc_src="$DOTFILES_ROOT/.bashrc"
+    local source_line="source \"$bashrc_src\""
     append_once "$source_line" ~/.bashrc
-    info "~/.bashrc: ensured source line for ~/dotfiles/.bashrc."
+    info "~/.bashrc: ensured source line for $bashrc_src."
 }
 
 
@@ -208,16 +227,13 @@ install_vim_plug() {
 
 # ─── fzf ──────────────────────────────────────────────────────────────────────
 # The vimrc binds <C-p> to :Files (fzf.vim).
-# The bashrc sources fzf key-bindings and defines FZF_* env vars.
-# The bashrc's key-bindings path (/usr/share/doc/fzf/examples/...) only exists
-# for apt-installed fzf. A fallback for git-installed fzf is appended below.
+# Key-bindings are sourced from dotfiles/.bashrc (apt path or ~/.fzf fallback).
 
 install_fzf() {
     header "fzf"
 
     if have fzf; then
         info "fzf already installed ($(command -v fzf))."
-        _ensure_fzf_keybindings
         return
     fi
 
@@ -233,17 +249,7 @@ install_fzf() {
     # --no-update-rc  : PATH comes from ~/.local/share/dotfiles/env.sh
     ~/.fzf/install --no-update-rc --key-bindings --completion
 
-    _ensure_fzf_keybindings
     info "fzf → ~/.fzf"
-}
-
-# The dotfiles .bashrc sources the apt path for fzf key-bindings. If fzf was
-# installed from git, that file doesn't exist and bindings are silently absent.
-# Append a fallback that covers the git-installed location.
-_ensure_fzf_keybindings() {
-    local git_bindings='[[ -f ~/.fzf/shell/key-bindings.bash ]] && source ~/.fzf/shell/key-bindings.bash'
-    append_once "$git_bindings" ~/.bashrc
-    info "fzf key-bindings fallback ensured in ~/.bashrc"
 }
 
 
@@ -473,9 +479,20 @@ install_bat_release() {
     trap - RETURN INT TERM
 }
 
-install_vifm_preview_tooling() {
-    header "vifm preview tooling (deps)"
+vifm_previews_already_configured() {
+    local root="$DOTFILES_ROOT"
+    [[ -L "${HOME}/.local/bin/vifm-preview" ]] \
+        && [[ "$(readlink -f "${HOME}/.local/bin/vifm-preview")" == "$(readlink -f "${root}/vifm/vifm-preview")" ]] \
+        && [[ -L "${HOME}/.config/vifm/vifmimgrc" ]] \
+        && [[ "$(readlink -f "${HOME}/.config/vifm/vifmimgrc")" == "$(readlink -f "${root}/vifm/vifmimgrc")" ]] \
+        && [[ -L "${HOME}/.config/vifm/vifmrc" ]] \
+        && [[ "$(readlink -f "${HOME}/.config/vifm/vifmrc")" == "$(readlink -f "${root}/vifm/vifmrc")" ]] \
+        && [[ -L "${HOME}/.config/vifm/colors/palenight.vifm" ]] \
+        && [[ "$(readlink -f "${HOME}/.config/vifm/colors/palenight.vifm")" == "$(readlink -f "${root}/vifm/colors/palenight.vifm")" ]]
+}
 
+
+install_vifm_preview_tooling() {
     install_vifm_apt_debs
     refresh_dotfiles_env
     install_bat_release
@@ -484,42 +501,24 @@ install_vifm_preview_tooling() {
 
 
 link_vifm_dotfiles() {
-    local root
-    root=$(dotfiles_root)
-
     mkdir -p "$HOME/.local/bin" "$HOME/.config/vifm/colors"
 
-    if [[ ! -r "$root/vifm/vifm-preview" || ! -r "$root/vifm/vifmimgrc" || ! -r "$root/vifm/vifmrc" || ! -r "$root/vifm/colors/palenight.vifm" ]]; then
-        die "missing $root/vifm/{vifm-preview,vifmimgrc,vifmrc,colors/palenight.vifm}"
+    if [[ ! -r "$DOTFILES_ROOT/vifm/vifm-preview" || ! -r "$DOTFILES_ROOT/vifm/vifmimgrc" || ! -r "$DOTFILES_ROOT/vifm/vifmrc" || ! -r "$DOTFILES_ROOT/vifm/colors/palenight.vifm" ]]; then
+        die "missing $DOTFILES_ROOT/vifm/{vifm-preview,vifmimgrc,vifmrc,colors/palenight.vifm}"
     fi
-    ln -sf "$root/vifm/vifm-preview" "$HOME/.local/bin/vifm-preview"
-    ln -sf "$root/vifm/vifmimgrc" "$HOME/.config/vifm/vifmimgrc"
-    ln -sf "$root/vifm/colors/palenight.vifm" "$HOME/.config/vifm/colors/palenight.vifm"
-    ln -sf "$root/vifm/vifmrc" "$HOME/.config/vifm/vifmrc"
+    link_dotfile "$DOTFILES_ROOT/vifm/vifm-preview" "$HOME/.local/bin/vifm-preview"
+    link_dotfile "$DOTFILES_ROOT/vifm/vifmimgrc" "$HOME/.config/vifm/vifmimgrc"
+    link_dotfile "$DOTFILES_ROOT/vifm/colors/palenight.vifm" "$HOME/.config/vifm/colors/palenight.vifm"
+    link_dotfile "$DOTFILES_ROOT/vifm/vifmrc" "$HOME/.config/vifm/vifmrc"
     rm -f "$HOME/.local/bin/vifmimg" "$HOME/.local/bin/vifmimg.upstream" "$HOME/.local/bin/vifmrun" 2>/dev/null || true
 }
 
-
-install_vifm_previews() {
-    header "vifm previews (chafa + vifm-preview)"
-
-    local root
-    root=$(dotfiles_root)
-    if [[ ! -r "$root/vifm/vifm-preview" || ! -r "$root/vifm/vifmrc" ]]; then
-        return 0
-    fi
-
-    link_vifm_dotfiles
-}
-
-
-# Optional vifm previews: check first, ask only if not already complete.
 
 install_vifm_previews_optional() {
     header "vifm previews"
 
     if vifm_previews_already_configured; then
-        info "vifm previews already installed (vifm-preview, chafa rules in vifmimgrc)."
+        info "vifm previews already installed (symlinks into ~/.config/vifm and ~/.local/bin)."
         return 0
     fi
 
@@ -527,7 +526,7 @@ install_vifm_previews_optional() {
         || { info "Skipping vifm previews."; return 0; }
 
     install_vifm_preview_tooling
-    install_vifm_previews
+    link_vifm_dotfiles
 }
 
 
@@ -561,6 +560,8 @@ install_bashmarks() {
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 main() {
+    bootstrap_dotfiles_checkout
+
     echo
     echo "════════════════════════════════════"
     echo "  Dotfiles Installer"
