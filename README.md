@@ -45,12 +45,17 @@ d <bookmark_name> - Deletes the bookmark
 l                 - Lists all available bookmarks
 ```
 
-### `run` — C++ runner for competitive programming
+### `compile` / `run` — C++ helper for competitive programming
 
-Compiles and runs a `.cpp` file with `-std=c++17 -O2`, then removes the temporary binary on exit, interrupt, or error.
+`compile` builds a `.cpp` file with `-std=c++17 -O2`, ASan/UBSan, fortify/stack-protector, and libstdc++ assertion checks. `run` calls `compile`, executes the binary, then removes it on exit, interrupt, or error.
 
 ```bash
+compile file.cpp [extra g++ flags]
 run file.cpp [extra g++ flags]
+run -S file.cpp          # extra warnings (-Wconversion, -Wshadow, …)
+run -D file.cpp          # full libstdc++ debug mode (slower; catches iterator bugs)
+CPP_STRICT=1 run file.cpp
+CPP_DEBUG=1 run file.cpp
 ```
 
 ## [vifm](https://vifm.info/) — terminal file manager
