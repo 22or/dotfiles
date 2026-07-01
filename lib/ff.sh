@@ -1,0 +1,131 @@
+# lib/ff.sh — interactive project-wide content search (grep + fzf)
+
+ff() {
+  local query="${1:-}"
+
+  local grep_cmd="grep -rIn --color=never \
+    --exclude-dir=.git --exclude-dir=.venv --exclude-dir=node_modules \
+    --exclude-dir=.idea --exclude-dir=__pycache__ --exclude-dir=.next \
+    --exclude-dir=.nuxt --exclude-dir=dist --exclude-dir=build --exclude-dir=.cache \
+    --exclude=*.png --exclude=*.jpg --exclude=*.jpeg --exclude=*.gif \
+    --exclude=*.webp --exclude=*.svg --exclude=*.ico --exclude=*.woff \
+    --exclude=*.woff2 --exclude=*.ttf --exclude=*.eot --exclude=*.pdf \
+    --exclude=*.zip --exclude=*.tar --exclude=*.gz --exclude=*.lock"
+
+  local tmp_awk;       tmp_awk=$(mktemp)
+  local tmp_query;     tmp_query=$(mktemp)
+  local tmp_highlight; tmp_highlight=$(mktemp)
+  echo "$query" > "$tmp_query"
+  trap "rm -f '$tmp_awk' '$tmp_query' '$tmp_highlight'" RETURN INT TERM
+
+  cat > "$tmp_awk" << 'AWK'
+{
+  colon1 = index($0, ":")
+  if (colon1 == 0) next
+
+  path = substr($0, 1, colon1 - 1)
+  rest = substr($0, colon1 + 1)
+
+  colon2 = index(rest, ":")
+  if (colon2 == 0) next
+
+  line    = substr(rest, 1, colon2 - 1)
+  content = substr(rest, colon2 + 1)
+
+  if (line !~ /^[0-9]+$/) next
+
+  gsub(/\t/, "    ", content)
+
+  stripped = content
+  gsub(/^[ \t\r\n]+|[ \t\r\n]+$/, "", stripped)
+  if (stripped == "") next
+
+  n = split(path, p, "/")
+  short = (n > 2) ? "…/" p[n-1] "/" p[n] : path
+
+  display_content = content
+  if (q != "") {
+    qr = q; gsub(/[.\\+*?()\[\]{}|^$]/, "\\\\&", qr)
+    match_pos = index(tolower(content), tolower(q))
+    if (match_pos > 0) {
+      win   = 40
+      start = match_pos - win; if (start < 1) start = 1
+      stop  = match_pos + length(q) + win - 1
+      display_content = (start > 1 ? "…" : "") \
+                        substr(content, start, stop - start + 1) \
+                        (stop < length(content) ? "…" : "")
+    }
+    gsub(qr, "\033[1;31m&\033[0m", display_content)
+  }
+
+  printf "%s\t%s\t\033[36m%s\033[0m:\033[33m%s\033[0m: %s\n", path, line, short, line, display_content
+}
+AWK
+
+  cat > "$tmp_highlight" << 'AWK'
+BEGIN {
+  e    = "\033"
+  bg   = e "[48;5;237m"
+  reset = e "[0m"
+  kw   = e "[1;31m"
+  if (q != "") { qr = q; gsub(/[.\\+*?()\[\]{}|^$]/, "\\\\&", qr) }
+}
+NR == hl {
+  # Strip ALL ANSI escape sequences for a clean slate
+  gsub(/\033\[[0-9;]*[mKHfABCDsuJh]/, "")
+  # Keyword highlight on clean text, keeping background intact after each reset
+  if (q != "") gsub(qr, kw "&" reset bg)
+  print bg $0 reset
+  next
+}
+{
+  # Other lines: keep bat syntax colors, best-effort keyword highlight
+  if (q != "") gsub(qr, kw "&" reset)
+  print
+}
+AWK
+
+  local preview_pos='right:55%'
+  [[ ${COLUMNS:-80} -lt 110 ]] && preview_pos='bottom:45%'
+
+  local preview_cmd='
+    q=$(cat '"'$tmp_query'"' 2>/dev/null)
+    if command -v bat &>/dev/null; then
+      bat --style=numbers --color=always --paging=never {1} 2>/dev/null \
+        | awk -v hl={2} -v q="$q" -f '"'$tmp_highlight'"'
+    else
+      cat -n {1} | awk -v hl={2} -v q="$q" -f '"'$tmp_highlight'"'
+    fi
+  '
+
+  local fzf_opts=(
+    --ansi
+    --delimiter $'\t'
+    --with-nth 3
+    --preview "$preview_cmd"
+    --preview-window "${preview_pos}:+{2}-/2:wrap"
+    --bind 'ctrl-p:toggle-preview'
+    --header '  ENTER open  │  CTRL-P toggle preview'
+  )
+
+  local result
+
+  if [[ -z "$query" ]]; then
+    result=$(fzf "${fzf_opts[@]}" \
+      --disabled \
+      --prompt '  ' \
+      --bind "change:execute-silent(printf '%s' \"\$FZF_QUERY\" > '$tmp_query')+reload:[ -z \"\$FZF_QUERY\" ] && exit 0; $grep_cmd \"\$FZF_QUERY\" . 2>/dev/null | awk -v q=\"\$FZF_QUERY\" -f '$tmp_awk' | grep -v $'^\\\t*\$' || true")
+  else
+    result=$(eval "$grep_cmd '$query' ." 2>/dev/null \
+      | awk -v q="$query" -f "$tmp_awk" \
+      | grep -v $'^\t*$' \
+      | fzf "${fzf_opts[@]}" --prompt "  $query > ")
+  fi
+
+  if [[ -n "$result" ]]; then
+    local file line
+    file=$(cut -f1 <<< "$result")
+    line=$(cut -f2 <<< "$result")
+    ${EDITOR:-vim} +"$line" "$file"
+  fi
+}

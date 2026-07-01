@@ -124,10 +124,6 @@ main() {
     remove_user_local_binary vifm
     rm -f "$HOME/.local/bin/vifmimg" "$HOME/.local/bin/vifmimg.upstream" "$HOME/.local/bin/vifmrun" 2>/dev/null || true
 
-    if [[ -d "$HOME/.local/opt/fd" ]]; then
-        rm -rf "$HOME/.local/opt/fd"
-        info "Removed ~/.local/opt/fd"
-    fi
     if [[ -d "$HOME/.local/opt/vifm-deps" ]]; then
         rm -rf "$HOME/.local/opt/vifm-deps"
         info "Removed ~/.local/opt/vifm-deps"

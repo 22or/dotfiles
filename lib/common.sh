@@ -40,6 +40,39 @@ ask() {
 
 have() { command -v "$1" &>/dev/null; }
 
+# arch_triple <flavor>  — musl (sharkdp tarballs), gnu (glibc lib dirs), chafa (static tarball)
+arch_triple() {
+    local flavor="${1:?}"
+    case "$(uname -m)" in
+        x86_64)
+            case "$flavor" in
+                musl)        echo x86_64-unknown-linux-musl ;;
+                gnu|chafa)   echo x86_64-linux-gnu ;;
+            esac
+            ;;
+        aarch64|arm64)
+            case "$flavor" in
+                musl) echo aarch64-unknown-linux-musl ;;
+                gnu)  echo aarch64-linux-gnu ;;
+                chafa) return 1 ;;
+            esac
+            ;;
+        armv7l|armv6*|armv7*)
+            case "$flavor" in
+                musl)  echo arm-unknown-linux-musleabihf ;;
+                gnu)   echo arm-linux-gnueabihf ;;
+                chafa) echo armv7l-linux-gnu ;;
+            esac
+            ;;
+        *)
+            case "$flavor" in
+                musl)        echo x86_64-unknown-linux-musl ;;
+                gnu|chafa)   echo x86_64-linux-gnu ;;
+            esac
+            ;;
+    esac
+}
+
 # Append a literal line to a file only if it is not already present.
 append_once() {
     local line="$1" file="$2"
