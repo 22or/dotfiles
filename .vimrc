@@ -47,6 +47,7 @@ endfunction
 " Import things
 if has('python3')
 python3 << endpython
+import sys
 import vim
 
 try:

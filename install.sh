@@ -14,18 +14,11 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
 bootstrap_dotfiles_checkout() {
     local src="${BASH_SOURCE[0]:-}"
 
-    if [[ -n "$src" && -f "$src" ]]; then
-        local dir
-        dir=$(cd "$(dirname "$src")" && pwd)
-        if [[ -f "$dir/.bashrc" && -f "$dir/install.sh" ]]; then
-            if (( !_DOTFILES_ROOT_FROM_ENV )); then
-                DOTFILES_ROOT="$dir"
-                export DOTFILES_ROOT
-            fi
-        fi
-        if [[ "$(readlink -f "$src")" == "$(readlink -f "$DOTFILES_ROOT/install.sh")" ]]; then
-            return 0
-        fi
+    init_dotfiles_root_from_script
+
+    if [[ -n "$src" && -f "$src" ]] \
+        && [[ "$(readlink -f "$src")" == "$(readlink -f "$DOTFILES_ROOT/install.sh")" ]]; then
+        return 0
     fi
 
     if [[ ! -d "$DOTFILES_ROOT" ]]; then

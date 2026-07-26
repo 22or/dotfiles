@@ -40,6 +40,26 @@ unset color_prompt
 PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}:$(short_pwd)\007"'
 
 
+# ─── Terminal state guard ─────────────────────────────────────────────────────
+# fzf's Ctrl-R and Ctrl-T run through `bind -x`, so fzf exits as a foreground job
+# while readline still holds the tty raw, and bash keeps that raw state as the
+# baseline it restores whenever a later foreground job dies from a signal. After
+# an fzf recall, `cat big | reader` whose reader exits early kills cat with
+# SIGPIPE and so lands back in raw mode with echo off, making typing invisible.
+# Repairing it inside the widget is not possible -- bash never re-preps readline
+# afterwards, so leaving the tty cooked there breaks editing for the rest of the
+# line -- hence the repair happens here, where the tty is legitimately cooked.
+_tty_guard() {
+    [[ $- == *i* && -t 0 ]] || return 0
+    local s
+    s=$(stty -a 2>/dev/null) || return 0
+    s=" ${s//[$'\n';]/ } "
+    [[ $s == *" -echo "* || $s == *" lnext = <undef> "* ]] && stty sane 2>/dev/null
+    return 0
+}
+PROMPT_COMMAND="_tty_guard${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+
+
 # ─── Aliases ──────────────────────────────────────────────────────────────────
 alias ll='ls -alF'
 alias la='ls -A --classify'
@@ -49,8 +69,6 @@ if [ -x /usr/bin/dircolors ]; then
     eval "$(dircolors -b)"
     alias ls='ls --color=auto'
     alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
 fi
 
 
