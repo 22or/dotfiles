@@ -208,7 +208,7 @@ set title						" vim window title
 set background=dark					" needed for colors to work predictably
 let g:lsp_diagnostics_echo_cursor=1	" echo error when cursor hovers the code
 let g:lsp_semantic_enabled=1		" enable semantic highlighting
-unlet c_comment_strings				" disable highlighting constants in comments
+unlet! c_comment_strings			" disable highlighting constants in comments
 
 " lsp
 hi LspSemanticVariable ctermfg=none
