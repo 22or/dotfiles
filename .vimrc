@@ -149,6 +149,10 @@ augroup lsp_hover_tweaks
 	\ }) | endif
 augroup END
 
+" scroll inside hover buffer
+nnoremap <buffer> <expr> <C-j> lsp#scroll(+1)
+nnoremap <buffer> <expr> <C-k> lsp#scroll(-1)
+
 
 
 " MORE BINDS
