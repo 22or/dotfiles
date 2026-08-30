@@ -24,9 +24,11 @@ short_pwd() {
     fi
 }
 
-case "$TERM" in
-    xterm-color|*-256color) color_prompt=yes ;;
-esac
+# Detect color support by capability rather than TERM name, so this works for
+# xterm-ghostty, foot, wezterm, etc. without maintaining a pattern list.
+if [ -x /usr/bin/tput ] && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
+    color_prompt=yes
+fi
 
 if [ "$color_prompt" = yes ]; then
 	PS1='\[\e[90m\]╭──[\e[92m\u@\h\e[90m]─[\[\e[33m\]$(short_pwd)\[\e[90m\]]$(j=$(jobs -s | wc -l); [ "$j" -gt 0 ] && printf "─[\[\e[91m\]&%s\[\e[90m\]]" "$j")\n╰─\[\e[97m\]\$ \[\e[0m\]'
