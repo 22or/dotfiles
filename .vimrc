@@ -1,5 +1,7 @@
 source $VIMRUNTIME/defaults.vim
 
+
+
 call plug#begin()
 Plug 'prabirshrestha/asyncomplete.vim'
 Plug 'prabirshrestha/asyncomplete-file.vim'
@@ -13,6 +15,13 @@ Plug 'Valloric/vim-operator-highlight'
 Plug 'wellle/context.vim'
 Plug 'liuchengxu/vista.vim'
 call plug#end()
+
+
+
+" LSP LOGS
+
+let g:lsp_log_verbose = 1
+let g:lsp_log_file = expand('~/.vim/lsp.log')
 
 
 
@@ -122,6 +131,7 @@ let g:context_highlight_tag='LineNr'
 
 let $FZF_DEFAULT_COMMAND='fdfind --type f --hidden --follow . ../..'	" Default search dir
 nnoremap <silent> <c-p> :Files<CR>
+nnoremap <silent> <c-b> :Buffers<CR>
 
 
 
@@ -171,6 +181,9 @@ nnoremap <silent> <F2> :LspHover<Cr>
 nnoremap <silent> gd :LspDefinition<CR>
 nnoremap <silent> <F4> :LspPeekDefinition<CR>
 
+" Explorer
+nnoremap <leader>e :Explore<CR>
+
 " Invisible insert,delete hack to allow indents on blank lines
 " inoremap <CR> <CR><Space><BS>
 " nnoremap o o<Space><BS>
@@ -187,6 +200,8 @@ for s:dir in ['~/.vim/undo', '~/.vim/backup', '~/.vim/swap']
     endif
 endfor
 
+set splitright					" split windows to the right
+set splitbelow					" split windows to below
 set mouse=						" disable mouse
 set undofile					" enable undo history persistence
 set undodir=~/.vim/undo			" where undos are stored
@@ -196,6 +211,8 @@ set tabstop=4					" number of spaces in one tab
 set shiftwidth=4				" number of spaces for one shift command (>>)
 set relativenumber						" enable line numbers
 set number
+autocmd FileType netrw setlocal relativenumber	" enable for netrw
+autocmd FileType netrw setlocal number
 set cindent						" smarter auto indenter
 filetype plugin indent on		" detects syntax rules based on filetype
 set breakindent					" Indents word-wrapped lines as much as the 'parent' line
