@@ -220,7 +220,14 @@ set linebreak					" don't split words when wrapping
 autocmd FileType * setlocal formatoptions-=ro " disable continuing comments on o and enter
 set signcolumn=yes				" make sign column always visible
 autocmd Filetype * setlocal indentkeys-=:	" dont treat : as an indent key
-set title						" vim window title
+
+" set window title
+if executable('tmux')
+	autocmd BufEnter * call system("tmux rename-window " . expand("%:t"))
+	autocmd VimLeave * call system("tmux rename-window bash")
+endif
+autocmd BufEnter * let &titlestring = ' ' . expand("%:t")
+set title
 
 
 
