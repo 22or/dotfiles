@@ -108,6 +108,7 @@ main() {
 
     header "Config symlinks"
     remove_dotfile_symlink "$HOME/.vimrc" "$DOTFILES_ROOT/.vimrc"
+    remove_dotfile_symlink "$HOME/.tmux.conf" "$DOTFILES_ROOT/.tmux.conf"
     remove_dotfile_symlink "$HOME/.local/bin/vifm-preview" "$DOTFILES_ROOT/vifm/vifm-preview"
     remove_dotfile_symlink "$HOME/.config/vifm/vifmimgrc" "$DOTFILES_ROOT/vifm/vifmimgrc"
     remove_dotfile_symlink "$HOME/.config/vifm/vifmrc" "$DOTFILES_ROOT/vifm/vifmrc"
@@ -147,6 +148,12 @@ main() {
         ask "Remove fzf (~/.fzf)?" \
             && { rm -rf "$HOME/.fzf"; info "Removed ~/.fzf"; } \
             || info "Keeping ~/.fzf"
+    fi
+
+    if [[ -d "$HOME/.tmux/plugins/tpm" ]]; then
+        ask "Remove TPM and installed tmux plugins (~/.tmux/plugins)?" \
+            && { rm -rf "$HOME/.tmux/plugins"; info "Removed ~/.tmux/plugins"; } \
+            || info "Keeping ~/.tmux/plugins"
     fi
 
     if [[ -f "$HOME/.vim/autoload/plug.vim" ]]; then

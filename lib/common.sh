@@ -102,6 +102,13 @@ fetch_soft() {
     return 1
 }
 
+# True when dest is a hard link to src (same device + inode), not merely equal content.
+same_inode() {
+    local a="$1" b="$2"
+    [[ -e "$a" && -e "$b" ]] || return 1
+    [[ "$(stat -c '%d:%i' "$a" 2>/dev/null)" == "$(stat -c '%d:%i' "$b" 2>/dev/null)" ]]
+}
+
 # Symlink dest → src. Skips existing regular files and foreign symlinks.
 link_dotfile() {
     local src="$1" dest="$2"
@@ -112,6 +119,12 @@ link_dotfile() {
     elif [[ -L "$dest" ]]; then
         info "$dest is a symlink (not pointing at $src). Leaving unchanged."
         return 1
+    elif same_inode "$dest" "$src"; then
+        # Hard link to src: same file already, so replacing it with a symlink loses nothing.
+        rm -f "$dest"
+        ln -s "$src" "$dest"
+        info "Replaced hard link $dest with symlink → $src"
+        return 0
     elif [[ -e "$dest" ]]; then
         info "WARNING: $dest exists and is not a symlink. Skipping to avoid data loss."
         info "         Run uninstall.sh then install.sh for a clean reinstall."

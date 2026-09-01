@@ -103,6 +103,7 @@ install_dotfiles() {
     info "Using dotfiles at $DOTFILES_ROOT."
 
     link_dotfile "$DOTFILES_ROOT/.vimrc" ~/.vimrc
+    link_dotfile "$DOTFILES_ROOT/.tmux.conf" ~/.tmux.conf
 
     # Source dotfiles/.bashrc from ~/.bashrc
     local bashrc_src="$DOTFILES_ROOT/.bashrc"
@@ -504,6 +505,43 @@ link_vifm_dotfiles() {
 }
 
 
+# ─── tmux / TPM ───────────────────────────────────────────────────────────────
+# .tmux.conf ends with `run '~/.tmux/plugins/tpm/tpm'` and declares @plugin lines;
+# without TPM those are inert and tmux prints an error on every start.
+
+install_tpm() {
+    header "tmux (TPM)"
+
+    if ! have tmux; then
+        info "tmux not found — install tmux from your package manager, then rerun."
+        return 0
+    fi
+
+    local tpm_dir="$HOME/.tmux/plugins/tpm"
+
+    if [[ -d "$tpm_dir/.git" ]]; then
+        info "TPM already installed ($tpm_dir)."
+        return 0
+    fi
+
+    ask "Install TPM (tmux plugin manager) into ~/.tmux/plugins/tpm?" \
+        || { info "Skipping TPM."; return 0; }
+
+    mkdir -p "$HOME/.tmux/plugins"
+    git clone --depth 1 https://github.com/tmux-plugins/tpm "$tpm_dir"
+    info "TPM → $tpm_dir"
+
+    # Plugins declared in .tmux.conf; needs the config linked, so install after install_dotfiles.
+    if [[ -x "$tpm_dir/bin/install_plugins" ]] && [[ -e "$HOME/.tmux.conf" ]]; then
+        info "Installing tmux plugins..."
+        "$tpm_dir/bin/install_plugins" >/dev/null 2>&1 \
+            || info "Plugin install failed — run prefix + I inside tmux."
+    else
+        info "Run prefix + I inside tmux to install plugins."
+    fi
+}
+
+
 # ─── Bashmarks ────────────────────────────────────────────────────────────────
 # Provides s, g, p, d, l commands for saving and jumping to directories.
 # https://github.com/huyng/bashmarks
@@ -550,6 +588,7 @@ main() {
     install_runtime_deps
     refresh_dotfiles_env
     install_dotfiles
+    install_tpm
 
     echo
     echo "════════════════════════════════════"

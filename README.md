@@ -8,6 +8,7 @@ For an effective terminal setup, I recommend a terminal tiler. I use the tiling 
 * [bat](https://github.com/sharkdp/bat) — auto-installed with fzf or vifm
 * [vifm](https://vifm.info/)
 * [chafa](https://hpjansson.org/chafa/) — auto-installed with vifm (also poppler-utils, mediainfo)
+* [tmux](https://github.com/tmux/tmux) — install it yourself; `install.sh` then sets up [TPM](https://github.com/tmux-plugins/tpm) and the plugins
 
 ## Installation
 
@@ -17,7 +18,7 @@ curl -fsSL https://raw.githubusercontent.com/22or/dotfiles/refs/heads/master/ins
 
 Or: `~/dotfiles/install.sh` — set `DOTFILES_ROOT` for a non-default checkout. Re-run after pulling to refresh symlinks.
 
-Install order: CLI tools → runtime deps (bat, vifm previews) → `env.sh` → symlinks (`.vimrc`, `.bashrc` source, vifm config). Existing non-symlink files at targets are skipped; run `uninstall.sh` then `install.sh` for a clean reinstall.
+Install order: CLI tools → runtime deps (bat, vifm previews) → `env.sh` → symlinks (`.vimrc`, `.tmux.conf`, `.bashrc` source, vifm config) → TPM + tmux plugins. Existing non-symlink files at targets are skipped (a hard link to the repo copy is upgraded to a symlink); run `uninstall.sh` then `install.sh` for a clean reinstall.
 
 
 ## .bashrc
@@ -50,6 +51,12 @@ l                 - Lists all available bookmarks
 * Vi-style keys and dual-pane layout
 * [chafa](https://hpjansson.org/chafa/) — bitmap previews for images
 * Config under `vifm/` is symlinked by `install.sh` (palenight theme, chafa + text previews)
+
+## .tmux.conf
+
+Prefix is `C-a`. Vi-style pane navigation (`h/j/k/l`) and resizing (`H/J/K/L`), `|` / `-` splits that keep the current path, `prefix + f` for an fzf pane picker popup, palenight-ish status bar on top.
+
+Plugins managed with [TPM](https://github.com/tmux-plugins/tpm) (tmux-sensible, tmux-resurrect, tmux-continuum). `install.sh` clones TPM and installs them; `prefix + I` inside tmux does it manually.
 
 ## .vimrc
 
