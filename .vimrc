@@ -14,6 +14,7 @@ Plug 'kshenoy/vim-signature'
 Plug 'Valloric/vim-operator-highlight'
 Plug 'wellle/context.vim'
 Plug 'liuchengxu/vista.vim'
+Plug 'jiangmiao/auto-pairs'
 call plug#end()
 
 
