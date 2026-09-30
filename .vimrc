@@ -217,8 +217,7 @@ set tabstop=4					" number of spaces in one tab
 set shiftwidth=4				" number of spaces for one shift command (>>)
 set relativenumber						" enable line numbers
 set number
-autocmd FileType netrw setlocal relativenumber	" enable for netrw
-autocmd FileType netrw setlocal number
+let g:netrw_bufsettings = 'noma nomod nu rnu nobl nowrap ro' " netrw
 set cindent						" smarter auto indenter
 filetype plugin indent on		" detects syntax rules based on filetype
 set breakindent					" Indents word-wrapped lines as much as the 'parent' line
