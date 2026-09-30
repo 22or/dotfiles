@@ -28,6 +28,7 @@ let g:lsp_log_file = expand('~/.vim/lsp.log')
 
 " AUTO-PAIRS
 let g:AutoPairsCompleteOnlyOnSpace = 1
+let g:AutoPairsMapBS = 1
 
 
 
