@@ -14,7 +14,7 @@ Plug 'kshenoy/vim-signature'
 Plug 'Valloric/vim-operator-highlight'
 Plug 'wellle/context.vim'
 Plug 'liuchengxu/vista.vim'
-Plug 'jiangmiao/auto-pairs'
+Plug 'LunarWatcher/auto-pairs'
 call plug#end()
 
 
@@ -23,6 +23,11 @@ call plug#end()
 
 let g:lsp_log_verbose = 1
 let g:lsp_log_file = expand('~/.vim/lsp.log')
+
+
+
+" AUTO-PAIRS
+let g:AutoPairsCompleteOnlyOnSpace = 1
 
 
 
