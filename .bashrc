@@ -64,12 +64,15 @@ PROMPT_COMMAND="_tty_guard${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
 
 # ─── Aliases ──────────────────────────────────────────────────────────────────
 alias ll='ls -alF'
-alias la='ls -A --classify'
+alias la='ls -AF'
 
 # Colored output
 if [ -x /usr/bin/dircolors ]; then
     eval "$(dircolors -b)"
     alias ls='ls --color=auto'
+    alias grep='grep --color=auto'
+elif [ "$(uname)" = "Darwin" ]; then
+    export CLICOLOR=1
     alias grep='grep --color=auto'
 fi
 
