@@ -15,6 +15,7 @@ Plug 'Valloric/vim-operator-highlight'
 Plug 'wellle/context.vim'
 Plug 'liuchengxu/vista.vim'
 Plug 'LunarWatcher/auto-pairs'
+Plug 'obcat/vim-sclow'
 call plug#end()
 
 
@@ -26,7 +27,14 @@ let g:lsp_log_file = expand('~/.vim/lsp.log')
 
 
 
+" VIM-SCLOW
+
+hi SclowSbar ctermbg=darkgray
+
+
+
 " AUTO-PAIRS
+
 let g:AutoPairsCompleteOnlyOnSpace = 1
 let g:AutoPairsSpaceCompletionRegex = '\w'
 let g:AutoPairsMapBS = 1
