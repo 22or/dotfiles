@@ -29,7 +29,9 @@ let g:lsp_log_file = expand('~/.vim/lsp.log')
 
 " VIM-SCLOW
 
-hi SclowSbar ctermbg=darkgray
+hi SclowSbar ctermbg=NONE ctermfg=darkgray
+let g:sclow_sbar_text = '▐'
+let g:sclow_auto_hide = 1000
 
 
 
